@@ -49,4 +49,9 @@
 	   :filter-slots-by-type
 	   :filter-slots-by-layer
 	   :find-slot-definition
-	   :class-precedents))
+	   :class-precedents
+
+	   ;;cache tables
+	   :*class-precedents*
+	   :*filtered-slots*
+	   :*slot-definitions*))
