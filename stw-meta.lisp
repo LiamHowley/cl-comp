@@ -1,9 +1,9 @@
-(in-package :ctx.meta)
+(in-package :stw.meta)
 
 
-(define-layered-class base-class
-    (special-layered-access-class)
-  ())
+(defclass base-class
+  (special-layered-access-class)
+   ())
 
 (defmethod validate-superclass
     ((class base-class)
@@ -13,10 +13,10 @@
 
 ;; compute definition
 
-(defclass ctx-direct-slot-definition (special-layered-direct-slot-definition attribute-class)
+(defclass stw-direct-slot-definition (special-layered-direct-slot-definition)
   ())
 
-(defclass ctx-effective-slot-definition (special-layered-effective-slot-definition)
+(defclass stw-effective-slot-definition (special-layered-effective-slot-definition)
   ())
 
 
@@ -46,10 +46,10 @@
   (flet ((attributep (slot) (typep slot (slot-definition-class class)))) 
     (let ((*effective-slot-definition*
 	   (when (find-if #'attributep direct-slot-definitions)
-	     (find-class 'ctx-effective-slot-definition))))
+	     (find-class 'stw-effective-slot-definition))))
       (call-next-method))))
 
 
-(defclass ctx-base-class
-    (partial-class base-class) ()
+(define-layered-class stw-base-class
+ :in-layer stw-base-layer (partial-class base-class) ()
   (:default-initargs :defining-metaclass 'base-class))
