@@ -53,3 +53,27 @@
 (define-layered-class stw-base-class
  :in-layer stw-base-layer (partial-class base-class) ()
   (:default-initargs :defining-metaclass 'base-class))
+
+
+
+;;; helper macro to define a base class
+
+(defmacro define-base-class (&whole form name &body parts)
+  (let* ((layer-p (member (car parts) '(:in-layer :in) :test #'eq))
+	 (layer (if layer-p
+		    (cadr parts)
+		    t))
+	 (rest (cond (layer-p
+		       (cddr parts))
+		      ((not (listp (car parts)))
+		       (error "illegal option ~s in ~s."
+			      (car parts) form))
+		      (t parts)))
+	 (supers (car rest))
+	 (slots (cadr rest))
+	 (class-slots (cddr rest)))
+    `(define-layered-class ,name
+       :in ,layer ,supers ,slots
+       ,@class-slots
+       ,@(unless (assoc :metaclass class-slots)
+	   `((:metaclass stw-base-class))))))
