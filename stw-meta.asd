@@ -7,8 +7,8 @@
 		 "fare-memoization")
     :components ((:file "package")
 		 (:file "stw-layer")
-		 (:file "stw-meta")
-		 (:file "stw-util"))
+		 (:file "stw-util")
+		 (:file "stw-meta"))
     :long-description
     #.(uiop:read-file-string
        (uiop:subpathname *load-pathname* "README.txt"))
