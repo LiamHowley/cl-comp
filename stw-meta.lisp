@@ -21,7 +21,7 @@
 
 
 (defun slot-definition-class (class)
-  (handler-case (direct-slot-class (find-layer (class-layer class)))
+  (handler-case (direct-slot-class (find-layer-class (class-layer class)))
     (error () nil)))
 
 
