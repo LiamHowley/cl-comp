@@ -10,6 +10,10 @@
      (superclass standard-class))
   t)
 
+(defmethod validate-superclass
+    ((superclass standard-class)
+     (class base-class))
+  t)
 
 ;; compute definition
 
@@ -56,7 +60,7 @@
 
 
 
-;;; helper macro to define a base class
+;;; helper macros to define a base class
 
 (defmacro define-base-class (&whole form name &body parts)
   (let* ((layer-p (member (car parts) '(:in-layer :in) :test #'eq))
