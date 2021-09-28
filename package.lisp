@@ -9,29 +9,46 @@
 		:class-finalized-p
 		:class-direct-slots
 		:class-direct-superclasses
+		:class-slots
 		:validate-superclass
 		:standard-class
 		:standard-direct-slot-definition
 		:direct-slot-definition-class
 		:effective-slot-definition-class
 		:compute-effective-slot-definition
-		:slot-definition-name)
+		:slot-definition-name
+		:slot-value-using-class)
   (:import-from :contextl
-		:deflayer
-		:standard-layer-class
 		:adjoin-layer-using-class
-		:define-layered-class
-		:define-layered-method
 		:call-next-layered-method
-		:remove-layer
+		:class-layer
+		:define-layered-class
+		:define-layered-function
+		:define-layered-method
+		:deflayer
+		:find-layer-class
+		:layer-active-p
+		:layered-class
+		:layered-effective-slot-definition-in-layers
+		:layered-effective-slot-definition
 		:partial-class
 		:partial-class-base-initargs
+		:remove-layer
 		:special-layered-access-class
 		:special-layered-direct-slot-definition
 		:special-layered-effective-slot-definition
-		:find-layer
-		:class-layer)
+		:standard-layer-class
+
+		;; build contextual environment
+		:capture-dynamic-environment
+		:defdynamic
+		:dynamic-let
+		:dynamic
+		:dletf
+		:with-active-layers
+		:with-dynamic-environment)
   (:export :stw-base-class
+	   :define-base-class
 	   :base-class
 
 	   ;; slots
@@ -62,4 +79,15 @@
 	   ;;cache tables
 	   :*class-precedents*
 	   :*filtered-slots*
-	   :*slot-definitions*))
+	   :*slot-definitions*
+
+	   ;;layered-context
+	   :define-class-context
+	   :with-class-in-context
+	   :define-layer-context
+	   :with-context
+
+	   ;; printing
+	   :print-layered-object
+	   :print-layered-object-p
+	   :print-layered-slot))
