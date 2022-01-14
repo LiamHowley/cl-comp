@@ -63,43 +63,30 @@
 ;;; helper macros to define a base class
 
 (defmacro define-base-class (&whole form name &body parts)
-  (let* ((layer-p (member (car parts) '(:in-layer :in) :test #'eq))
-	 (layer (if layer-p
-		    (cadr parts)
-		    t))
-	 (rest (cond (layer-p
-		       (cddr parts))
-		      ((not (listp (car parts)))
-		       (error "illegal option ~s in ~s."
-			      (car parts) form))
-		      (t parts)))
-	 (supers (car rest))
-	 (slots (cadr rest))
-	 (class-slots (cddr rest)))
-    `(define-layered-class ,name
-       :in ,layer ,supers ,slots
-       ,@class-slots
-       ,@(unless (assoc :metaclass class-slots)
-	   `((:metaclass stw-base-class))))))
-
-
-
-;;;; printing
-
-(defmethod print-object ((object stw-base-class) stream)
-  (if (layer-active-p 'stw-base-layer) 
-      ;; set indentation if any before printing object
-      (print-layered-object object nil stream 0)
-      (call-next-method)))
-
-
-(define-layered-function print-layered-object (object constraint stream &optional indent)
-  (:documentation "Print layered object to stream. Useful to call from PRINT-OBJECT for example.")
-
-  (:method :in stw-base-layer (object constraint stream &optional indent)
-	   (declare (ignore constraint))
-	   (print-unreadable-object (object stream :type t :identity t))))
-
-
-(define-layered-function print-layered-slot (object slot type stream)
-  (:documentation "Given object slot-definition and slot-definition-type print a representation to stream."))
+  (macrolet ((set-attr (attribute &optional value)
+	       `(unless (member ,attribute slot)
+		  (setf slot (append slot `(,,attribute ,,value))))))
+    (let* ((layer-p (member (car parts) '(:in-layer :in) :test #'eq))
+	   (layer (if layer-p
+		      (cadr parts)
+		      t))
+	   (parts (cond (layer-p
+			 (cddr parts))
+			((not (listp (car parts)))
+			 (error "illegal option ~s in ~s."
+				(car parts) form))
+			(t parts)))
+	   (supers (car parts))
+	   (rest (cdr parts))
+	   (instance-slots (car rest))
+	   (class-slots (cdr rest))
+	   (slots (mapcar #'(lambda (slot)
+			      (setf slot (ensure-list slot))
+			      (set-attr :initarg (intern (string-upcase (symbol-name (car slot))) 'keyword))
+			      slot)
+			  instance-slots)))
+      `(define-layered-class ,name
+	 :in ,layer ,supers ,slots
+	 ,@class-slots
+	 ,@(unless (assoc :metaclass class-slots)
+	     `((:metaclass stw-base-class)))))))
