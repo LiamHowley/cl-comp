@@ -1,6 +1,7 @@
 (defpackage stw.meta
   (:use :cl)
   (:import-from :stw.util
+		:ensure-list
 		:map-tree-depth-first
 		:mappend)
   (:import-from :fare-memoization
@@ -17,6 +18,7 @@
 		:effective-slot-definition-class
 		:compute-effective-slot-definition
 		:slot-definition-name
+		:slot-definition-initargs
 		:slot-value-using-class)
   (:import-from :contextl
 		:adjoin-layer-using-class
@@ -52,6 +54,7 @@
 	   :base-class
 
 	   ;; slots
+	   :slot-definition-class
 	   :direct-slot-class
 	   :stw-direct-slot-definition
 
@@ -75,11 +78,15 @@
 	   :filter-slots-by-layer
 	   :find-slot-definition
 	   :class-precedents
+	   :all-slots
+	   :clone-object
+	   :object-to-plist
 
 	   ;;cache tables
 	   :*class-precedents*
 	   :*filtered-slots*
 	   :*slot-definitions*
+	   :*all-slots*
 
 	   ;;layered-context
 	   :define-class-context

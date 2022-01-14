@@ -40,6 +40,21 @@ of a class. Results are cached unless nil."
 		     parents))))
 
 
+
+;;; all direct slots, including slots derived from supers.
+
+(defvar *all-slots* (make-hash-table :test #'equal))
+
+(defun all-slots% (class)
+  "Returns effective slots as direct slots."
+  (append (class-direct-slots class)
+	  (mappend #'map-tree-depth-first #'all-slots%
+		   (class-direct-superclasses class))))
+
+(define-memo-function (all-slots :table *all-slots*) (class)
+  (all-slots% class))
+
+
 ;;; filtered slots
 
 (defun filtered-slots (class filter)
@@ -58,13 +73,12 @@ of a class. Results are cached unless nil."
 (defvar *filtered-slots* (make-hash-table :test #'equal))
 
 (defun filter-slots-by-type (class object-type)
-  "Returns the direct slot definitions of all slots 
+  "Returns the direct/effective slot definitions of all slots 
 of object-type associated with a class, including 
 inherited slots. Recursively walks through superclasses. 
 Results are cached unless nil."
   (let ((class (class-definition class)))
-;;    (when (class-finalized-p class)
-      (cache-filter-slots-by-type class object-type)))
+    (cache-filter-slots-by-type class object-type)))
   
 
 (defun filtered-effective-slots (class filter)
@@ -109,8 +123,6 @@ Results are cached unless nil."
 	(loop for slot in (filter-slots-by-type (class-definition class) type)
 	   when (eq (slot-definition-name slot) slot-name)
 	   return slot))))
-
-
 
 
 ;;; defining context for use with special slots
@@ -166,3 +178,65 @@ ENV variable is returned along with the captured environment."
 ENV is set by the DEFINE-LAYERED-CONTEXT macro."
   `(with-dynamic-environment ((dynamic ,env))
      ,@body))
+
+
+
+;; shallow copy
+
+(defun clone-object (original)
+  (let ((clone (object-to-plist original :recurse nil)))
+    (apply #'make-instance (car clone) (cdr clone))))
+
+
+(defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders) 
+  "Recursively walks through a class creating a plist from the initargs
+and values of it's slots. The structural model of the data is replicated in
+the resulting tree."
+  (let* ((class (class-of object))
+	 (list (if filter
+		   (filter-slots-by-type class filter)
+		   (all-slots class)))
+	 (keys))
+    (labels ((walk (slots acc)
+	       (cond ((null slots)
+		      acc)
+		     ((consp slots)
+		      (walk (car slots) (walk (cdr slots) acc)))
+		     ((atom slots)
+		      (if (typep slots (or filter 'c2mop:standard-direct-slot-definition))
+			  (let* ((slot slots)
+				 (slot-name (slot-definition-name slot)))
+			    (when (slot-boundp object slot-name)
+			      (let* ((initarg (car (slot-definition-initargs slot)))
+				     (value (when (find-symbol (symbol-name slot-name) package)
+					      (unless (member initarg keys)
+						(slot-value object slot-name)))))
+				(push initarg keys)
+				(cond ((and recurse
+					    (consp value))
+				       (cons initarg (cons (walk value nil) acc)))
+				      (value
+				       (cons initarg
+					     (cons (if use-placeholders
+						       initarg
+						       value)
+						   acc)))
+				      (t acc)))))
+			  (typecase (class-of slots)
+			    (built-in-class
+			     (cons (if use-placeholders
+				       (car keys)
+				       slots)
+				   acc))
+			    (standard-class
+			     (cons (if recurse
+				       (object-to-plist slots
+							:filter filter
+							:use-placeholders use-placeholders
+							:package package)
+				       slots)
+				   acc))
+			    (t acc)))))))
+      (let ((list (walk list nil)))
+	(push (class-name class) list)
+	list))))

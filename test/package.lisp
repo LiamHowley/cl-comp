@@ -4,7 +4,8 @@
 	:stw.meta)
   (:import-from :closer-mop
 		:standard-direct-slot-definition
-		:slot-definition-name))
+		:slot-definition-name)
+  (:export :stw-meta))
 
 (in-package stw.meta.test)
 
