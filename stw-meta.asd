@@ -8,7 +8,8 @@
     :components ((:file "package")
 		 (:file "stw-layer")
 		 (:file "stw-util")
-		 (:file "stw-meta"))
+		 (:file "stw-meta")
+		 (:file "print"))
     :long-description
     #.(uiop:read-file-string
        (uiop:subpathname *load-pathname* "README.txt"))
