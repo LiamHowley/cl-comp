@@ -75,7 +75,6 @@
 
 	   ;;mop utility functions
 	   :filter-slots-by-type
-	   :filter-slots-by-layer
 	   :find-slot-definition
 	   :class-precedents
 	   :filter-precedents-by-type
