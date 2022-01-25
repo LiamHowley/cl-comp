@@ -46,6 +46,7 @@
 		:defdynamic
 		:dynamic-let
 		:dynamic
+		:dlet
 		:dletf
 		:with-active-layers
 		:with-dynamic-environment)

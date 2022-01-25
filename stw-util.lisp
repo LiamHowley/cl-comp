@@ -190,7 +190,7 @@ ENV is set by the DEFINE-CONTEXT macro."
 ENV variable is returned along with the captured environment."
   `(defdynamic ,env
      (with-active-layers ,active-layers
-       (dletf ,bindings
+       (dlet ,bindings
 	 ,@body
 	 (capture-dynamic-environment)))))
 
