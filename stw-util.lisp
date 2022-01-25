@@ -19,6 +19,8 @@
 ;; Cache tables are exported in package.lisp, so that they can
 ;; be cleared when class definitions are redefined.
 
+;; TO BE REWORKED IN PLACES!!!
+
 ;;; class precedents
 
 (defvar *class-precedents* (make-hash-table :test #'equal))
@@ -39,6 +41,24 @@ of a class. Results are cached unless nil."
 	    (mappend #'map-tree-depth-first #'class-precedents%
 		     parents))))
 
+
+;;; filtered precedents
+
+(defvar *filtered-precedents* (make-hash-table :test #'equal))
+
+(define-memo-function (filter-precedents-by-type :table *filtered-precedents*)
+    (class object-type)
+  (filtered-precedents class #'(lambda (class)
+				 (typep class object-type))))
+
+(defun filtered-precedents (class filter)
+  "Find all superclasses in the inheritance hierarchy of a class"
+  (let ((parents (class-direct-superclasses class)))
+    (append (remove-if-not filter parents)
+	    (mappend #'map-tree-depth-first
+		     #'(lambda (class)
+			 (filtered-precedents class filter))
+		     parents))))
 
 
 ;;; all direct slots, including slots derived from supers.

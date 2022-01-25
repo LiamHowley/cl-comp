@@ -78,6 +78,7 @@
 	   :filter-slots-by-layer
 	   :find-slot-definition
 	   :class-precedents
+	   :filter-precedents-by-type
 	   :all-slots
 	   :clone-object
 	   :object-to-plist
