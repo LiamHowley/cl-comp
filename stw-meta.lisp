@@ -55,7 +55,7 @@
 
 
 (define-layered-class stw-base-class
- :in-layer stw-base-layer (partial-class base-class) ()
+ :in-layer stw-base-layer (partial-class)()
   (:default-initargs :defining-metaclass 'base-class))
 
 
