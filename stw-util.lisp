@@ -3,6 +3,8 @@
 
 ;; clos helpers
 
+(declaim (inline class-definition))
+
 (defun class-definition (class)
   (typecase class
     (symbol (find-class class))
