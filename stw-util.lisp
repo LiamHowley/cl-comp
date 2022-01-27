@@ -50,8 +50,9 @@ of a class. Results are cached unless nil."
 
 (define-memo-function (filter-precedents-by-type :table *filtered-precedents*)
     (class object-type)
-  (filtered-precedents class #'(lambda (class)
-				 (typep class object-type))))
+  (let ((class (class-definition class)))
+    (filtered-precedents class #'(lambda (class)
+				   (typep class object-type)))))
 
 (defun filtered-precedents (class filter)
   "Find all superclasses in the inheritance hierarchy of a class"
