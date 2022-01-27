@@ -59,6 +59,9 @@
   (:default-initargs :defining-metaclass 'base-class))
 
 
+(defclass serialize ()()
+  (:metaclass singleton-class))
+
 
 ;;; helper macros to define a base class
 

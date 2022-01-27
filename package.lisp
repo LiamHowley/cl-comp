@@ -33,6 +33,7 @@
 		:layered-class
 		:layered-effective-slot-definition-in-layers
 		:layered-effective-slot-definition
+		:singleton-class
 		:partial-class
 		:partial-class-base-initargs
 		:remove-layer
@@ -98,4 +99,7 @@
 	   ;; printing
 	   :print-layered-object
 	   :print-layered-object-p
-	   :print-layered-slot))
+	   :print-layered-slot
+
+	   ;;helpers
+	   :serialize))
