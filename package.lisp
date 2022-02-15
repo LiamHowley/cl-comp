@@ -57,7 +57,6 @@
 
 	   ;; slots
 	   :slot-definition-class
-	   :direct-slot-class
 	   :stw-direct-slot-definition
 
 	   ;;layers
@@ -101,5 +100,5 @@
 	   :print-layered-object-p
 	   :print-layered-slot
 
-	   ;;helpers
+	   ;; singleton / helper
 	   :serialize))

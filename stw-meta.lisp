@@ -23,15 +23,13 @@
 (defclass stw-effective-slot-definition (special-layered-effective-slot-definition)
   ())
 
-
-(defun slot-definition-class (class)
-  (handler-case (direct-slot-class (find-layer-class (class-layer class)))
-    (error () nil)))
-
+(defgeneric slot-definition-class (class)
+  (:method (layer) nil))
 
 (defmethod direct-slot-definition-class
     ((class base-class) &key &allow-other-keys)
-  (let ((slot-definition-class (slot-definition-class class)))
+  (let* ((layer-class (find-layer-class (class-layer class)))
+	 (slot-definition-class (slot-definition-class layer-class)))
     (if slot-definition-class
 	slot-definition-class
 	(call-next-method))))

@@ -7,11 +7,10 @@
   ;;layers setup
 
   (defclass test-layer-1-metaclass (stw-layer-context)
-    ((direct-slot-class :initform 'test-1-direct-slot-definition)))
+    ())
 
   (defclass test-layer-2-metaclass (stw-layer-context)
-    ((direct-slot-class :initform 'test-2-direct-slot-definition)))
-
+    ())
 
   (deflayer test-layer-1 (stw-base-layer)
     ()
@@ -29,6 +28,13 @@
 
   (defclass test-2-direct-slot-definition (stw-direct-slot-definition)
     ((test-slot :initform t :accessor test-2-slot-p)))
+
+
+  (defmethod slot-definition-class ((class test-layer-1-metaclass))
+    'test-1-direct-slot-definition)
+
+  (defmethod slot-definition-class ((class test-layer-2-metaclass))
+    'test-2-direct-slot-definition)
 
 
   ;; setup class definition slot
