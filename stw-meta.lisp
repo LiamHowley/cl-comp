@@ -84,11 +84,12 @@
 
 ;; I'm not too happy with applying the WITH-ACTIVE-LAYERS macro
 ;; here. It would be infinitely preferable to have the layer
-;; activation enforced via mop machinery. If DEFINE-BASE-CLASS is
+;; activation enforced via mop/contextl machinery. If DEFINE-BASE-CLASS is
 ;; not used but the metaclass is specified directly and outside of
 ;; the appropriately activated context, it won't work as intended.
 ;; Indeed the wrong layer being activated would entail a trip to
-;; the wrong initialize-in-context method altogether.
+;; the wrong initialize-in-context method altogether or a method-not-found
+;; error.
 
 (defmacro define-base-class (&whole form name &body parts)
   (macrolet ((set-attr (attribute &optional value)
