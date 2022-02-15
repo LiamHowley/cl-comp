@@ -50,12 +50,12 @@ of a class. Results are cached unless nil."
 
 (define-memo-function (filter-precedents-by-type :table *filtered-precedents*)
     (class object-type)
-  (let ((class (class-definition class)))
-    (filtered-precedents class #'(lambda (class)
-				   (typep class object-type)))))
+  (filtered-precedents (class-definition class) #'(lambda (class)
+						    (typep class object-type))))
 
 (defun filtered-precedents (class filter)
-  "Find all superclasses in the inheritance hierarchy of a class"
+  "Find all superclasses in the inheritance hierarchy of a class, 
+filtered by type"
   (let ((parents (class-direct-superclasses class)))
     (append (remove-if-not filter parents)
 	    (mappend #'map-tree-depth-first
@@ -232,19 +232,21 @@ the resulting tree."
 			    (when (slot-boundp object slot-name)
 			      (let* ((initarg (car (slot-definition-initargs slot)))
 				     (value (when (find-symbol (symbol-name slot-name) package)
-					      (unless (member initarg keys)
+					      (unless (member slot-name keys)
 						(slot-value object slot-name)))))
-				(push initarg keys)
-				(cond ((and recurse
-					    (consp value))
-				       (cons initarg (cons (walk value nil) acc)))
-				      (value
-				       (cons initarg
-					     (cons (if use-placeholders
-						       initarg
-						       value)
-						   acc)))
-				      (t acc)))))
+				(push slot-name keys)
+				(setf acc
+				      (cond ((and recurse
+						  (consp value))
+					     (cons initarg (cons (walk value nil) acc)))
+					    (value
+					     (cons initarg
+						   (cons (if use-placeholders
+							     slot-name
+							     value)
+							 acc)))
+					    (t acc)))))
+			    acc)
 			  (typecase (class-of slots)
 			    (built-in-class
 			     (cons (if use-placeholders

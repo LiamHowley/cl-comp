@@ -167,17 +167,19 @@
   :depends-on (sanity)
   (is equal (object-to-plist instance)
       `(test-class :slot-a t))
-  (is equal (object-to-plist *complex-person*)
+  (is equal
+      (object-to-plist *complex-person*)
       `(complex-person
 	:name "Michele"
 	:email "michele@testemail.com"
 	:interests ("reading" "soccer" "taekwondo")
 	:occupations ((occupation :job-type "accountant" :qualification "professional")
 		      (occupation :job-type "actuary" :qualification "professional"))))
-  (is equal (object-to-plist *complex-person* :use-placeholders t)
+  (is equal
+      (object-to-plist *complex-person* :use-placeholders t)
       `(complex-person
-	:name :name
-	:email :email 
-	:interests (:interests :interests :interests)
-	:occupations ((occupation :job-type :job-type :qualification :qualification)
-		      (occupation :job-type :job-type :qualification :qualification)))))
+	:name name
+	:email email 
+	:interests (interests interests interests)
+	:occupations ((occupation :job-type job-type :qualification qualification)
+		      (occupation :job-type job-type :qualification qualification)))))
