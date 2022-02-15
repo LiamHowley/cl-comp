@@ -55,6 +55,9 @@
 	   :define-base-class
 	   :base-class
 
+	   ;; initializing
+	   :initialize-in-context
+
 	   ;; slots
 	   :slot-definition-class
 	   :stw-direct-slot-definition

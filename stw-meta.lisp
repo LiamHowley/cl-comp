@@ -52,16 +52,43 @@
       (call-next-method))))
 
 
+(define-layered-function initialize-in-context (class slot-names &key &allow-other-keys)
+
+  (:method ((class base-class) slot-names &key &allow-other-keys)
+    (declare (ignore slot-names))
+    class)
+
+  (:method ((slot stw-direct-slot-definition) slot-names &key &allow-other-keys)
+    (declare (ignore slot-names))
+    slot))
+
+
+(defmethod shared-initialize :around ((class base-class) slot-names &rest rest &key &allow-other-keys)
+  (call-next-method)
+  (apply #'initialize-in-context class slot-names rest))
+
+(defmethod shared-initialize :around ((slot stw-direct-slot-definition) slot-names &rest rest &key &allow-other-keys)
+  (call-next-method)
+  (apply #'initialize-in-context slot slot-names rest))
+
+
 (define-layered-class stw-base-class
  :in-layer stw-base-layer (partial-class)()
   (:default-initargs :defining-metaclass 'base-class))
-
 
 (defclass serialize ()()
   (:metaclass singleton-class))
 
 
 ;;; helper macros to define a base class
+
+;; I'm not too happy with applying the WITH-ACTIVE-LAYERS macro
+;; here. It would be infinitely preferable to have the layer
+;; activation enforced via mop machinery. If DEFINE-BASE-CLASS is
+;; not used but the metaclass is specified directly and outside of
+;; the appropriately activated context, it won't work as intended.
+;; Indeed the wrong layer being activated would entail a trip to
+;; the wrong initialize-in-context method altogether.
 
 (defmacro define-base-class (&whole form name &body parts)
   (macrolet ((set-attr (attribute &optional value)
@@ -86,8 +113,9 @@
 			      (set-attr :initarg (intern (string-upcase (symbol-name (car slot))) 'keyword))
 			      slot)
 			  instance-slots)))
-      `(define-layered-class ,name
-	 :in ,layer ,supers ,slots
-	 ,@class-slots
-	 ,@(unless (assoc :metaclass class-slots)
-	     `((:metaclass stw-base-class)))))))
+      `(with-active-layers (,layer)
+	 (define-layered-class ,name
+	   :in ,layer ,supers ,slots
+	   ,@class-slots
+	   ,@(unless (assoc :metaclass class-slots)
+	       `((:metaclass stw-base-class))))))))
