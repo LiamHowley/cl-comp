@@ -52,7 +52,12 @@
       (call-next-method))))
 
 
+
 (define-layered-function initialize-in-context (class slot-names &key &allow-other-keys)
+  (:documentation "Called from the body of :around qualified shared-initialize, after
+the main method has executed. Facilitates layer specific operations on the layered metaclass.
+Note: due to the indirection inherent in the use of a layered class structure, this may be 
+invoked twice for each layer.")
 
   (:method ((class base-class) slot-names &key &allow-other-keys)
     (declare (ignore slot-names))
@@ -61,6 +66,7 @@
   (:method ((slot stw-direct-slot-definition) slot-names &key &allow-other-keys)
     (declare (ignore slot-names))
     slot))
+
 
 
 (defmethod shared-initialize :around ((class base-class) slot-names &rest rest &key &allow-other-keys)
