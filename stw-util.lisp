@@ -12,6 +12,12 @@
     (otherwise class)))
 
 
+;; In all cached function calls below, whether
+;; calling class-direct-slots or class-direct-superclasses,
+;; a class must be finalized before a result will be returned.
+;; I.e. only cache when the class is finalized.
+;; Otherwise return nil.
+
 ;; Cache tables are exported in package.lisp, so that they can
 ;; be cleared when class definitions are redefined.
 
@@ -25,6 +31,7 @@
   "Find all superclasses in the inheritance hierarchy 
 of a class. Results are cached unless nil."
   (let ((class (class-definition class)))
+;;    (when (class-finalized-p class)
       (cache-class-precedents class)))
 
 (define-memo-function (cache-class-precedents :table *class-precedents*) (class)
@@ -109,11 +116,8 @@ Results are cached unless nil."
 			  (find-class 'object-type)
 			  object-type))
 	 (predicate #'(lambda (slot)
-			(typep slot object-type)))
-	 (slots (when (class-finalized-p (class-definition class))
-		  (filtered-effective-slots (class-definition class) predicate))))
-    (if slots slots
-	(filtered-slots (class-definition class) predicate))))
+			(typep slot object-type))))
+    (map-filtered-slots class predicate)))
 
 
 
@@ -124,23 +128,17 @@ Results are cached unless nil."
 (defun find-slot-definition (class slot-name &optional (type 'standard-direct-slot-definition))
   "Return and cache slot definition of slot-name and type.
 Results are cached unless nil."
-  (let ((class (class-definition class)))
-;;    (when (class-finalized-p class)
-      (cache-find-slot-definition class slot-name type)))
+  (cache-find-slot-definition class slot-name type))
 
 (define-memo-function (cache-find-slot-definition :table *slot-definitions*) (class slot-name type)
-  (let ((slot (when (class-finalized-p (class-definition class))
-		(setf slot (loop for slot in (class-slots (class-definition class))
-			      when (and (eq (slot-definition-name slot) slot-name)
-					(typep slot type))
-			      return slot)))))
-    (if slot slot
-	(loop for slot in (filter-slots-by-type (class-definition class) type)
-	   when (eq (slot-definition-name slot) slot-name)
-	   return slot))))
+  (loop for slot in (filter-slots-by-type (class-definition class) type)
+	when (eq (slot-definition-name slot) slot-name)
+	  return slot))
+
 
 
 ;;; defining context for use with special slots
+
 
 (defmacro define-class-context (env class-type active-layers (&rest rest &key &allow-other-keys)
 				  &body body)
