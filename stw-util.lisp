@@ -12,12 +12,6 @@
     (otherwise class)))
 
 
-;; In all cached function calls below, whether
-;; calling class-direct-slots or class-direct-superclasses,
-;; a class must be finalized before a result will be returned.
-;; I.e. only cache when the class is finalized.
-;; Otherwise return nil.
-
 ;; Cache tables are exported in package.lisp, so that they can
 ;; be cleared when class definitions are redefined.
 
@@ -31,7 +25,6 @@
   "Find all superclasses in the inheritance hierarchy 
 of a class. Results are cached unless nil."
   (let ((class (class-definition class)))
-;;    (when (class-finalized-p class)
       (cache-class-precedents class)))
 
 (define-memo-function (cache-class-precedents :table *class-precedents*) (class)
@@ -78,18 +71,17 @@ filtered by type"
   (all-slots% class))
 
 
+
 ;;; filtered slots
 
-(defun filtered-slots (class filter)
+(defun map-filtered-slots (class &optional (filter (constantly t)) (map #'identity))
   (let ((slots (remove-if-not filter (class-direct-slots class))))
     (append slots
-	    (remove-if #'(lambda (slot)
-			   (member (slot-definition-name slot)
-				   (mapcar #'slot-definition-name slots)))
-		       (mappend #'map-tree-depth-first
-				#'(lambda (class)
-				    (filtered-slots class filter))
-				(class-direct-superclasses class))))))
+	    (mapcar map 
+		    (mappend #'map-tree-depth-first
+			     #'(lambda (class)
+				 (map-filtered-slots class filter))
+			     (class-direct-superclasses class))))))
 
 
 
@@ -265,3 +257,13 @@ the resulting tree."
       (let ((list (walk list nil)))
 	(push (class-name class) list)
 	list))))
+
+
+(defun equality (ob1 ob2)
+  "Functionally if not structurally equal: i.e. it facilitates equality 
+testing between user-defined objects of different types."
+  (flet ((set-obj (obj)
+	   (if (typep (class-of obj) 'built-in-class)
+	       obj
+	       (object-to-plist obj))))
+    (equal (set-obj ob1)(set-obj ob2))))
