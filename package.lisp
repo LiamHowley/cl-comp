@@ -7,7 +7,7 @@
   (:import-from :fare-memoization
 		:define-memo-function)
   (:import-from :closer-mop
-		:class-finalized-p
+		:finalize-inheritance
 		:class-direct-slots
 		:class-direct-superclasses
 		:class-slots
@@ -78,6 +78,7 @@
 	   :with-active-layers
 
 	   ;;mop utility functions
+	   :map-filtered-slots
 	   :filter-slots-by-type
 	   :find-slot-definition
 	   :class-precedents

@@ -78,16 +78,15 @@ filtered by type"
   (all-slots% class))
 
 
-
 ;;; filtered slots
 
 (defun map-filtered-slots (class &optional (filter (constantly t)) (map #'identity))
   (let ((slots (remove-if-not filter (class-direct-slots class))))
     (append slots
-	    (mapcar map 
+	    (mapcar map
 		    (mappend #'map-tree-depth-first
 			     #'(lambda (class)
-				 (map-filtered-slots class filter))
+				 (map-filtered-slots class filter map))
 			     (class-direct-superclasses class))))))
 
 
