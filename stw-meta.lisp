@@ -53,29 +53,28 @@
 
 
 
-(define-layered-function initialize-in-context (class slot-names &key &allow-other-keys)
+(define-layered-function initialize-in-context (class &key &allow-other-keys)
   (:documentation "Called from the body of :around qualified shared-initialize, after
 the main method has executed. Facilitates layer specific operations on the layered metaclass.
 Note: due to the indirection inherent in the use of a layered class structure, this may be 
-invoked twice for each layer.")
+invoked more than once for each layer.")
 
-  (:method ((class base-class) slot-names &key &allow-other-keys)
-    (declare (ignore slot-names))
+  (:method ((class base-class) &key &allow-other-keys)
     class)
 
-  (:method ((slot stw-direct-slot-definition) slot-names &key &allow-other-keys)
-    (declare (ignore slot-names))
+  (:method ((slot stw-direct-slot-definition) &key &allow-other-keys)
     slot))
 
 
-
 (defmethod shared-initialize :around ((class base-class) slot-names &rest rest &key &allow-other-keys)
+  (declare (ignore slot-names))
   (call-next-method)
-  (apply #'initialize-in-context class slot-names rest))
+  (apply #'initialize-in-context class rest))
 
 (defmethod shared-initialize :around ((slot stw-direct-slot-definition) slot-names &rest rest &key &allow-other-keys)
+  (declare (ignore slot-names))
   (call-next-method)
-  (apply #'initialize-in-context slot slot-names rest))
+  (apply #'initialize-in-context slot rest))
 
 
 (define-layered-class stw-base-class
@@ -93,7 +92,7 @@ invoked twice for each layer.")
 ;; activation enforced via mop/contextl machinery. If DEFINE-BASE-CLASS is
 ;; not used but the metaclass is specified directly and outside of
 ;; the appropriately activated context, it won't work as intended.
-;; Indeed the wrong layer being activated would entail a trip to
+;; Indeed the wrong layer being activated could entail a trip to
 ;; the wrong initialize-in-context method altogether or a method-not-found
 ;; error.
 
