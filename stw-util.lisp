@@ -196,8 +196,31 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
 ;; shallow copy
 
 (defun clone-object (original)
+  "Makes shallow copy of clos object."
   (let ((clone (object-to-plist original :recurse nil)))
     (apply #'make-instance (car clone) (cdr clone))))
+
+
+(defun slots-with-values
+    (class &key (type 'standard-direct-slot-definition) (filter-if (constantly nil)) (filter-if-not (constantly t)))
+  "Returns the list of slots belonging to class that
+are bound to a value. For convenience it also returns
+a list of slot names."
+  (let ((record nil))
+    (loop
+      for i from 0
+      for slot in (filter-slots-by-type (class-of class) type)
+      for slot-name = (slot-definition-name slot)
+      when (and (slot-boundp class slot-name)
+		(slot-value class slot-name)
+		(funcall filter-if-not slot))
+	unless (or (member slot-name record :test #'eq)
+		   (funcall filter-if slot))
+	  collect slot-name into slot-names
+	  and collect slot into slots
+	  and collect i into pos
+	  and do (push slot-name record)
+      finally (return (values slots slot-names pos)))))
 
 
 (defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders) 

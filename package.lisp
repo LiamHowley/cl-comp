@@ -86,6 +86,7 @@
 	   :all-slots
 	   :clone-object
 	   :object-to-plist
+	   :slots-with-values
 
 	   ;;cache tables
 	   :*class-precedents*
