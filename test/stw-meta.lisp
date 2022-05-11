@@ -96,6 +96,8 @@
   :parent stw-meta
   ;; sanity check 1
   (of-type stw-base-class (class-of instance))
+  (of-type test-base-class-1 (class-of instance))
+  (of-type test-base-class-2 (class-of instance))
   ;; sanity check 2
   (true (slot-value instance 'slot-a)))
 
