@@ -88,7 +88,6 @@
 	   :clone-object
 	   :object-to-plist
 	   :slots-with-values
-	   :equality
 
 	   ;;cache tables
 	   :*class-precedents*
