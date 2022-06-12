@@ -193,6 +193,10 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
   `(with-dynamic-environment ((dynamic ,env))
      ,@body))
 
+(defmacro delete-context (env)
+  "Delete the captured dynamic environment."
+  `(setf (dynamic ,env) nil))
+
 
 
 ;; shallow copy

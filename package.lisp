@@ -100,6 +100,7 @@
 	   :with-class-in-context
 	   :define-layer-context
 	   :with-context
+	   :delete-context
 
 	   ;; printing
 	   :print-layered-object
