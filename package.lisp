@@ -50,6 +50,7 @@
 		:dlet
 		:dletf
 		:with-active-layers
+		:dynamic-environment
 		:with-dynamic-environment)
   (:export :stw-base-class
 	   :define-base-class

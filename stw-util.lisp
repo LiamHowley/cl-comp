@@ -140,13 +140,14 @@ Results are cached unless nil."
 
 ;;; defining context for use with special slots
 
-
 (defmacro define-class-context (env class-type active-layers (&rest rest &key &allow-other-keys)
 				  &body body)
-  "Sets and captures the dynamic environment for specific contexts. The symbol set with the 
-ENV variable is returned along with the captured environment. This encapsulates active layers 
-FORM-LAYER and dynamic values of class slot accessors, set through keyword args. 
-To be used in conjunction with the WITH-OBJECT-IN-CONTEXT macro."
+  "Sets and captures the dynamic environment for specific contexts. 
+Both ENV and CLASS-TYPE are symbols with the former dynamically bound within 
+the macro body. The symbol set to the ENV variable is bound by the captured 
+environment and returned. This captured environment encapsulates active layers 
+ and dynamic (special) values of class slot accessors, set through keyword args. 
+To be used in conjunction with the WITH-CLASS-IN-CONTEXT macro."
   (let ((slot (gensym))
 	(value (gensym)))
     `(symbol-macrolet ((class-definition ,(find-class class-type)))
@@ -167,7 +168,7 @@ To be used in conjunction with the WITH-OBJECT-IN-CONTEXT macro."
 
 
 (defmacro with-class-in-context (env class-instance &body body)
-  "Facilitates access to the dynamic context encapsulated by ENV. 
+  "Facilitates access to the dynamic context bound to ENV. 
 ENV is set by the DEFINE-CONTEXT macro."
   `(with-dynamic-environment ((dynamic ,env))
      (unless (typep ,class-instance (dynamic class-type))
@@ -178,8 +179,8 @@ ENV is set by the DEFINE-CONTEXT macro."
 
 
 (defmacro define-layer-context (env active-layers bindings &body body)
-  "Sets and captures the dynamic environment for specific contexts and bindings. The symbol set with the 
-ENV variable is returned along with the captured environment."
+  "Sets and captures the dynamic environment for specific contexts and bindings. The symbol set by the 
+ENV variable is bound to the captured environment and returned."
   `(defdynamic ,env
      (with-active-layers ,active-layers
        (dlet ,bindings
@@ -190,8 +191,11 @@ ENV variable is returned along with the captured environment."
 (defmacro with-context (env &body body)
   "Facilitates access to the dynamic context encapsulated by ENV. 
 ENV is set by the DEFINE-LAYERED-CONTEXT macro."
-  `(with-dynamic-environment ((dynamic ,env))
-     ,@body))
+  `(when (typep (dynamic ,env) 'dynamic-environment)
+     (progn
+       (with-dynamic-environment ((dynamic ,env))
+	 ,@body))))
+
 
 (defmacro delete-context (env)
   "Delete the captured dynamic environment."
