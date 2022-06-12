@@ -125,3 +125,9 @@ invoked more than once for each layer.")
 	   ,@class-slots
 	   ,@(unless (assoc :metaclass class-slots)
 	       `((:metaclass stw-base-class))))))))
+
+
+(defun serialized-p (supers)
+  (and supers
+       (loop for class in supers
+	       thereis (filter-precedents-by-type class 'singleton-class))))

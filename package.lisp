@@ -106,4 +106,5 @@
 	   :print-layered-slot
 
 	   ;; singleton / helper
-	   :serialize))
+	   :serialize
+	   :serialized-p))
