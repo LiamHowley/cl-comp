@@ -50,18 +50,20 @@ of a class. Results are cached unless nil."
 
 (define-memo-function (filter-precedents-by-type :table *filtered-precedents*)
     (class object-type)
-  (filtered-precedents (class-definition class) #'(lambda (class)
-						    (typep class object-type))))
+  (map-filtered-precedents (class-definition class)
+			   #'(lambda (class)
+			       (typep class object-type))))
 
-(defun filtered-precedents (class filter)
+(defun map-filtered-precedents (class &optional (filter (constantly t)) (map #'identity))
   "Find all superclasses in the inheritance hierarchy of a class, 
 filtered by type"
   (let ((parents (class-direct-superclasses class)))
     (append (remove-if-not filter parents)
-	    (mappend #'map-tree-depth-first
-		     #'(lambda (class)
-			 (filtered-precedents class filter))
-		     parents))))
+	    (mapcar map
+		    (mappend #'map-tree-depth-first
+			     #'(lambda (class)
+				 (map-filtered-precedents class filter map))
+			     parents)))))
 
 
 ;;; all direct slots, including slots derived from supers.

@@ -82,11 +82,13 @@
 	   :filter-slots-by-type
 	   :find-slot-definition
 	   :class-precedents
+	   :map-filtered-precedents
 	   :filter-precedents-by-type
 	   :all-slots
 	   :clone-object
 	   :object-to-plist
 	   :slots-with-values
+	   :equality
 
 	   ;;cache tables
 	   :*class-precedents*
