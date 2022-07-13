@@ -1,5 +1,5 @@
 (defsystem #:stw-meta
-    :description "Provides a context oriented metaclass."
+    :description "STW-META is a thin wrapper around ContextL, enabling context oriented metaclasses."
     :serial t
     :depends-on ("stw-utils"
 		 "closer-mop"
