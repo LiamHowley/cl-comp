@@ -85,6 +85,7 @@
 	   :class-precedents
 	   :map-filtered-precedents
 	   :filter-precedents-by-type
+	   :find-class-precedent
 	   :all-slots
 	   :clone-object
 	   :object-to-plist

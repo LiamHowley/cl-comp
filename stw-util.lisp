@@ -44,6 +44,19 @@ of a class. Results are cached unless nil."
 		     parents))))
 
 
+(defvar *class-precedent* (make-hash-table :test #'equal))
+
+(defun find-class-precedent (class precedent type)
+  "Find the precedent (name) in the list of precedents of class, by type.
+When present, returns the precedent class."
+  (cache-find-class-precedent class precedent type))
+
+(define-memo-function (cache-find-class-precedent :table *class-precedent*) (class precedent type)
+  (loop for class in (filter-precedents-by-type (class-definition class) type)
+	when (eq (class-name class) precedent)
+	  return class))
+
+
 ;;; filtered precedents
 
 (defvar *filtered-precedents* (make-hash-table :test #'equal))
