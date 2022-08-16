@@ -218,7 +218,6 @@ are bound to a value. For convenience it also returns
 a list of slot names."
   (let ((record nil))
     (loop
-      for i from 0
       for slot in (filter-slots-by-type (class-of class) type)
       for slot-name = (slot-definition-name slot)
       when (and (slot-boundp class slot-name)
@@ -228,9 +227,8 @@ a list of slot names."
 		   (funcall filter-if slot))
 	  collect slot-name into slot-names
 	  and collect slot into slots
-	  and collect i into pos
 	  and do (push slot-name record)
-      finally (return (values slots slot-names pos)))))
+      finally (return (values slots slot-names)))))
 
 
 (defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders) 
