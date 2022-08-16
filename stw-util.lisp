@@ -126,7 +126,7 @@ Results are cached unless nil."
 
 (defvar *slot-definitions* (make-hash-table :test #'equal))
 
-(defun find-slot-definition (class slot-name &optional (type 'standard-direct-slot-definition))
+(defun find-slot-definition (class slot-name type)
   "Return and cache slot definition of slot-name and type.
 Results are cached unless nil."
   (cache-find-slot-definition class slot-name type))
