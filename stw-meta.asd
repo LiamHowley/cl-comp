@@ -12,5 +12,5 @@
 		 (:file "print"))
     :long-description
     #.(uiop:read-file-string
-       (uiop:subpathname *load-pathname* "README.md"))
+       (uiop:subpathname *load-pathname* "docs/README.org"))
     :in-order-to ((test-op (load-op :stw-meta-test))))

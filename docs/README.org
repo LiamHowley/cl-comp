@@ -1,0 +1,223 @@
+#+OPTIONS: toc:nil
+* STW-META
+
+STW-META is a thin wrapper around CONTEXTL. CONTEXTL is an extension of the Common Lisp Object System, (CLOS), which uses a meta object protocol, (MOP), to create a metaclass that allows for layered classes and their initialization in multiple defined contexts. STW-META extends CONTEXTL by providing a protocol for defining layered metaclasses. It does so, by defining the layered metaclass STW-BASE-CLASS, which uses the defining-metaclass BASE-CLASS, and is itself defined in the layered context STW-BASE-LAYER. All subsequent definitions of STW-BASE-CLASS rely on user defined layers.
+
+
+** Protocol
+
+
+#+TOC: headlines
+
+*** Define layer context
+    
+As context layers are classes they can inherit from other context layers and use user defined metaclasses. The use of user defined metaclasses enables dispatching on layers by type. Thus the layered functions ADJOIN-LAYER-USING-CLASS and REMOVE-LAYER-USING-CLASS can be called to enable mutual exclusion, complementary inclusion, or various combinations of each, between layers. Layers inheriting from STW-BASE-LAYER are by default mutually exclusive.
+
+#+BEGIN_SRC lisp
+(defclass foo-metaclass (stw-layer-context)
+  ())
+
+(deflayer foo-context (stw-base-layer)
+  ()
+  (:metaclass foo-metaclass))
+#+END_SRC
+
+In the above definitions, FOO-METACLASS and FOO-CONTEXT are subtypes of STW-LAYER-CONTEXT and STW-BASE-LAYER respectively. Thus they inherit the rules established in the STW-META protocol.
+
+
+*** Create defining metaclass
+
+Using DEFCLASS or, if a specific layered context is desired, DEFINE-LAYERED-CLASS, create a class definition that inherits from BASE-CLASS 
+
+#+BEGIN_SRC lisp
+(define-layered-class bar
+  :in foo-context (base-class)
+  ((baz :initarg :baz :reader slot-definition-baz)))
+#+END_SRC
+
+As I have defined bar here as a layered class all the functionality associated with layered classes are available. BAZ for example could have been declared special, or a layered slot, whilst slot-definition-baz could have been created as a layered reader. Source documentation on such features can be found in documentation listed below.
+
+
+*** Append initargs for metaclass slots
+
+In order for the initarg :baz to be valid in any subsequent layered metaclasses it must be registered.
+
+#+BEGIN_SRC lisp
+(defmethod partial-class-base-initargs append ((class bar))
+  '(:baz))
+#+END_SRC
+
+
+*** Create slot definition class
+
+Define a class that inherits from STW-DIRECT-SLOT-DEFINITION.
+
+#+BEGIN_SRC lisp
+(defclass foo-context-slot-definition (stw-direct-slot-definition)
+  ((important :initarg :important :reader importantp)))
+#+END_SRC
+
+
+*** Register slot definition class in layer context
+
+The MOP method DIRECT-SLOT-DEFINITION-CLASS will look for the slot definition class to use. Should it not be defined all slots will be of type STANDARD-DIRECT-SLOT-DEFINITION.  
+
+#+BEGIN_SRC lisp
+(defmethod slot-definition-class ((layer-metaclass foo-metaclass))
+  'foo-context-slot-definition)
+#+END_SRC
+
+
+*** Define-layered metaclass
+
+As STW-BASE-CLASS is a layered-class, the choice when defining the metaclass is to create a sibling class in a different layer, as in:
+
+#+BEGIN_SRC lisp
+(define-layered-class stw-base-class
+  :in-layer foo-context (bar)
+  ())
+#+END_SRC
+
+or to define a metaclass that inherits stw-base-class but exists for the context of your application alone:
+
+#+BEGIN_SRC lisp
+(define-layered-class foobar
+  :in-layer foo-context (stw-base-class bar)
+  ())
+#+END_SRC
+
+
+*** Defining a class
+
+The macro DEFINE-BASE-CLASS is a wrapper on the macro DEFINE-LAYERED-CLASS, with a default metaclass of STW-BASE-CLASS. Slots can be passed as a combined list of symbols and cons. Initargs are automatically created, unless one is provided, using the keyword symbol of the slot name. The class definition is compiled within the layered environment of the definition, i.e. if the layer of a class is foo-context the class will be defined within the active layer foo-context. This aspect is relevant to the initialization process of the class definition.
+
+#+BEGIN_SRC lisp
+(define-base-class class-in-context 
+	:in foo-context ()
+	((slot-in-context :initarg :slot-in-context :initform nil))
+	(:metaclass foobar))
+
+#<FOOBAR STW.META::CLASS-IN-CONTEXT>
+#+END_SRC
+
+
+*** Initializing the class definition - important!
+
+As layered classes are subclasses of STANDARD-CLASS, initialization protocols proceed as per normal. As such, context specific initialization procedures should not be placed within initialize-instance, reinitialize-instance or shared-initialize methods, as they are called for each context in which a class is defined. To put it simply, they are not thread safe. Instead the layered function INITIALIZE-IN-CONTEXT is called from the auxiliary :around method of shared-initialize, and after the call to call-next-method. Context and class specific initialization procedures should be placed in specialized instances of this layered function. It is for this reason that layered classes of type STW-BASE-CLASS are defined within their layer context.
+
+** Introspection & utility functions / macros
+
+Utility functions provided break down into cached functions for introspection, mapping functions, macros that create and access contextual environments and one or two useful helper functions.
+
+
+*** Introspection
+
+Taking the class defined above CLASS-IN-CONTEXT, lets first verify that it contains the slot BAZ. 
+
+#+BEGIN_SRC lisp
+(slot-exists-p (find-class 'class-in-context) 'baz) => T
+#+END_SRC
+
+
+Now lets create another layer within it's own context:
+
+#+BEGIN_SRC lisp
+(defclass app-metaclass (stw-layer-context)
+  ())
+
+(deflayer app-context (stw-base-layer)
+  ()
+  (:metaclass app-metaclass))
+#+END_SRC
+
+And we'll follow that with another metaclass following the protocol above:
+
+#+BEGIN_SRC lisp
+(define-layered-class defining-app-class
+  :in app-context (base-class)
+  ((app-template :initform nil :initarg :template :reader template)))
+
+(defmethod partial-class-base-initargs append ((class defining-app-class))
+  '(:template))
+
+(defclass application-slot-definition (stw-direct-slot-definition)
+  ((important :initarg :important :initform nil :reader importantp)
+   (secure :initarg :secure :initform t :reader securep)))
+
+(defmethod slot-definition-class ((layer-metaclass app-metaclass))
+  'application-slot-definition)
+
+(define-layered-class app-class
+  :in app-context (stw-base-class defining-app-class)
+  ())
+
+(define-layered-class app-class
+  :in foo-context (foobar)
+  ())
+#+END_SRC
+
+
+Now we can create our layered class definitions.
+
+#+BEGIN_SRC lisp
+(define-base-class app-in-context 
+	:in foo-context ()
+	((slot-in-context :initarg :slot-in-context :initform nil))
+	(:metaclass app-class))
+
+#<APP-CLASS STW.META::APP-IN-CONTEXT>
+
+(define-base-class app-in-context 
+	:in app-context ()
+	((slot-in-context :initarg :slot-in-context :initform nil))
+	(:metaclass app-class)
+	(:template . #P"/template"))
+
+#<APP-CLASS STW.META::APP-IN-CONTEXT>
+
+(slot-value (find-class 'app-in-context) 'app-template) => #P"/template"
+#+END_SRC
+
+
+If using the function FILTER-SLOTS-BY-TYPE to request all slots of class app-in-context we find there are two slots named slot-in-context of type FOO-CONTEXT-SLOT-DEFINITION and APPLICATION-SLOT-DEFINITION. An important thing to note here is that FILTER-SLOTS-BY-TYPE and it's counterpart below FIND-SLOT-DEFINITION create and call on a cached store of direct slots definitions that are derived from the specified class and its precedents. I.e. they also return the direct slot definitions of inherited slots.
+
+#+BEGIN_SRC lisp
+(filter-slots-by-type (find-class 'app-in-context) 'stw-direct-slot-definition) =>
+
+(#<FOO-CONTEXT-SLOT-DEFINITION STW.META::SLOT-IN-CONTEXT>
+ #<APPLICATION-SLOT-DEFINITION STW.META::SLOT-IN-CONTEXT>)
+#+END_SRC
+
+When a single typed slot is required:
+
+#+BEGIN_SRC lisp
+(find-slot-definition (find-class 'app-in-context) 'slot-in-context 'application-slot-definition) =>
+
+#<APPLICATION-SLOT-DEFINITION STW.META::SLOT-IN-CONTEXT>
+
+(importantp *) => NIL 
+(securep **) => T
+
+(find-slot-definition (find-class 'app-in-context) 'slot-in-context 'foo-context-slot-definition) =>
+
+#<FOO-CONTEXT-SLOT-DEFINITION STW.META::SLOT-IN-CONTEXT>
+
+(importantp *) => CONDITION of type UNBOUND-SLOT 
+(securep **) => CONDITION of type NO-APPLICABLE-METHOD-ERROR
+#+END_SRC
+
+
+
+
+** Further Reading
+
+For more on CONTEXTL layers, including reflective activation/deactivation, see:
+
+[[https://www.p-cos.net/documents/contextl-overview.pdf]]
+https://www.p-cos.net/documents/contextl-soa.pdf
+https://www.hirschfeld.org/writings/media/CostanzaHirschfeld_2007_ReflectiveLayerActivationInContextL_AuthorsVersionAcm.pdf
+https://www.p-cos.net/documents/special-full.pdf
+
+Additionally, see the test cases at https://github.com/pcostanza/contextl/
+
+Finally, my gratitude goes to Pascal Costanza for both ContextL and Closer-Mop.
