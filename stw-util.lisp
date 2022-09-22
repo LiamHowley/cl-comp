@@ -109,7 +109,7 @@ filtered by type"
 (defvar *filtered-slots* (make-hash-table :test #'equal))
 
 (defun filter-slots-by-type (class object-type)
-  "Returns the direct/effective slot definitions of all slots 
+  "Returns the direct slot definitions of all slots 
 of object-type associated with a class, including 
 inherited slots. Recursively walks through superclasses. 
 Results are cached unless nil."
