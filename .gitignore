@@ -11,3 +11,8 @@
 .#*
 *.#*
 *#*#
+*.tex
+tex*
+*.pdf
+docs/_minted-README/*
+docs/README.html
