@@ -1,4 +1,4 @@
-(in-package stw.meta.test)
+(in-package cl-comp.test)
 
 ;;;; setting up
 
@@ -6,27 +6,27 @@
 
   ;;layers setup
 
-  (defclass test-layer-1-metaclass (stw-layer-context)
+  (defclass test-layer-1-metaclass (comp-layer-context)
     ())
 
-  (defclass test-layer-2-metaclass (stw-layer-context)
+  (defclass test-layer-2-metaclass (comp-layer-context)
     ())
 
-  (deflayer test-layer-1 (stw-base-layer)
+  (deflayer test-layer-1 (comp-base-layer)
     ()
     (:metaclass test-layer-1-metaclass))
 
-  (deflayer test-layer-2 (stw-base-layer)
+  (deflayer test-layer-2 (comp-base-layer)
     ()
     (:metaclass test-layer-2-metaclass))
 
 
   ;; referenced slot definition classes
 
-  (defclass test-1-direct-slot-definition (stw-direct-slot-definition)
+  (defclass test-1-direct-slot-definition (comp-direct-slot-definition)
     ((test-slot :initform t :accessor test-1-slot-p)))
 
-  (defclass test-2-direct-slot-definition (stw-direct-slot-definition)
+  (defclass test-2-direct-slot-definition (comp-direct-slot-definition)
     ((test-slot :initform t :accessor test-2-slot-p)))
 
 
@@ -60,10 +60,10 @@
       (base-class class-definition-slots)
     ())
 
-  (define-layered-class stw-base-class
+  (define-layered-class comp-base-class
     :in-layer test-layer-1 (partial-class test-base-class-1) ())
 
-  (define-layered-class stw-base-class
+  (define-layered-class comp-base-class
     :in-layer test-layer-2 (partial-class test-base-class-2) ())
 
 
@@ -93,9 +93,9 @@
 ;;;;; tests
 
 (define-test sanity
-  :parent stw-meta
+  :parent cl-comp
   ;; sanity check 1
-  (of-type stw-base-class (class-of instance))
+  (of-type comp-base-class (class-of instance))
   (of-type test-base-class-1 (class-of instance))
   (of-type test-base-class-2 (class-of instance))
   ;; sanity check 2
@@ -105,7 +105,7 @@
 (defparameter slot1 (find-slot-definition (find-class 'test-class) 'slot-a 'test-1-direct-slot-definition))
 
 (define-test metaclass-slots-layer-1
-  :parent stw-meta
+  :parent cl-comp
   :depends-on (sanity)
   (of-type test-1-direct-slot-definition slot1)
   (is eq (slot-definition-name slot1) 'slot-a)
@@ -114,14 +114,14 @@
 (defparameter slot2 (find-slot-definition (find-class 'test-class) 'slot-a 'test-2-direct-slot-definition))
 
 (define-test metaclass-slots-layer-2
-  :parent stw-meta
+  :parent cl-comp
   :depends-on (sanity)
   (of-type test-2-direct-slot-definition slot2)
   (is eq (slot-definition-name slot2) 'slot-a)
   (true (test-2-slot-p slot2)))
 
 (define-test class-slot-test
-  :parent stw-meta
+  :parent cl-comp
   :depends-on (sanity)
   (is equal (definition-slot-p (find-class 'test-class)) "something interesting")
   (with-context
@@ -133,10 +133,10 @@
   (is equal (definition-slot-p (find-class 'test-class)) "something interesting"))
 
 (define-test copy-object
-  :parent stw-meta
+  :parent cl-comp
   :depends-on (sanity)
   (let ((cloned-obj (clone-object instance)))
-    (of-type stw-base-class (class-of cloned-obj))
+    (of-type comp-base-class (class-of cloned-obj))
     (of-type test-class cloned-obj)
     (is eq t (slot-a cloned-obj))))
 
@@ -165,7 +165,7 @@
 										:qualification "professional"))))
 
 (define-test object->plist
-  :parent stw-meta
+  :parent cl-comp
   :depends-on (sanity)
   (is equal (object-to-plist instance)
       `(test-class :slot-a t))

@@ -1,4 +1,4 @@
-(defpackage stw.meta
+(defpackage cl-comp
   (:use :cl)
   (:import-from :stw.util
 		:ensure-list
@@ -52,7 +52,7 @@
 		:with-active-layers
 		:dynamic-environment
 		:with-dynamic-environment)
-  (:export :stw-base-class
+  (:export :comp-base-class
 	   :define-base-class
 	   :base-class
 
@@ -61,11 +61,11 @@
 
 	   ;; slots
 	   :slot-definition-class
-	   :stw-direct-slot-definition
+	   :comp-direct-slot-definition
 
 	   ;;layers
-	   :stw-base-layer
-	   :stw-layer-context
+	   :comp-base-layer
+	   :comp-layer-context
 
 	   ;;re-exporting from closer-mop
 	   :standard-direct-slot-definition

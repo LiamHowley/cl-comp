@@ -1,8 +1,8 @@
-(in-package :stw.meta)
+(in-package :cl-comp)
 
 
-(defmethod print-object ((object stw-base-class) stream)
-  (if (layer-active-p 'stw-base-layer) 
+(defmethod print-object ((object comp-base-class) stream)
+  (if (layer-active-p 'comp-base-layer) 
       ;; set indentation if any before printing object
       (print-layered-object object nil stream 0)
       (call-next-method)))
@@ -16,7 +16,7 @@
   (:documentation "Print layered object to stream. Useful to call from PRINT-OBJECT for example.")
 
   (:method
-      :in stw-base-layer (object constraint stream &optional indent)
+      :in comp-base-layer (object constraint stream &optional indent)
       (declare (ignore constraint))
       (print-unreadable-object (object stream :type t :identity t))))
 

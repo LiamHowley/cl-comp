@@ -1,4 +1,4 @@
-(in-package :stw.meta)
+(in-package :cl-comp)
 
 
 (defclass base-class
@@ -17,10 +17,10 @@
 
 ;; compute definition
 
-(defclass stw-direct-slot-definition (special-layered-direct-slot-definition)
+(defclass comp-direct-slot-definition (special-layered-direct-slot-definition)
   ())
 
-(defclass stw-effective-slot-definition (special-layered-effective-slot-definition)
+(defclass comp-effective-slot-definition (special-layered-effective-slot-definition)
   ())
 
 (defgeneric slot-definition-class (class)
@@ -48,7 +48,7 @@
   (flet ((attributep (slot) (typep slot (slot-definition-class class)))) 
     (let ((*effective-slot-definition*
 	   (when (find-if #'attributep direct-slot-definitions)
-	     (find-class 'stw-effective-slot-definition))))
+	     (find-class 'comp-effective-slot-definition))))
       (call-next-method))))
 
 
@@ -62,7 +62,7 @@ invoked more than once for each layer.")
   (:method ((class base-class) &key &allow-other-keys)
     class)
 
-  (:method ((slot stw-direct-slot-definition) &key &allow-other-keys)
+  (:method ((slot comp-direct-slot-definition) &key &allow-other-keys)
     slot))
 
 
@@ -71,14 +71,14 @@ invoked more than once for each layer.")
   (call-next-method)
   (apply #'initialize-in-context class rest))
 
-(defmethod shared-initialize :around ((slot stw-direct-slot-definition) slot-names &rest rest &key &allow-other-keys)
+(defmethod shared-initialize :around ((slot comp-direct-slot-definition) slot-names &rest rest &key &allow-other-keys)
   (declare (ignore slot-names))
   (call-next-method)
   (apply #'initialize-in-context slot rest))
 
 
-(define-layered-class stw-base-class
- :in-layer stw-base-layer (partial-class)()
+(define-layered-class comp-base-class
+ :in-layer comp-base-layer (partial-class)()
   (:default-initargs :defining-metaclass 'base-class))
 
 (defclass serialize ()()
@@ -124,7 +124,7 @@ invoked more than once for each layer.")
 	   :in ,layer ,supers ,slots
 	   ,@class-slots
 	   ,@(unless (assoc :metaclass class-slots)
-	       `((:metaclass stw-base-class))))))))
+	       `((:metaclass comp-base-class))))))))
 
 
 (defun serialized-p (supers)

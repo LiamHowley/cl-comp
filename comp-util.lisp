@@ -1,4 +1,4 @@
-(in-package stw.meta)
+(in-package cl-comp)
 
 
 ;; clos helpers

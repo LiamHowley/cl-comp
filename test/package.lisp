@@ -1,12 +1,12 @@
-(defpackage stw.meta.test
+(defpackage cl-comp.test
   (:use :cl
 	:parachute
-	:stw.meta)
+	:cl-comp)
   (:import-from :closer-mop
 		:standard-direct-slot-definition
 		:slot-definition-name)
-  (:export :stw-meta))
+  (:export :cl-comp))
 
-(in-package stw.meta.test)
+(in-package cl-comp.test)
 
-(define-test stw-meta)
+(define-test cl-comp)
