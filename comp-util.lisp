@@ -259,7 +259,8 @@ the resulting tree."
 		     ((consp slots)
 		      (walk (car slots) (walk (cdr slots) acc)))
 		     ((atom slots)
-		      (if (typep slots (or filter 'c2mop:standard-direct-slot-definition))
+		      (if (or filter
+			      (typep slots 'c2mop:standard-direct-slot-definition))
 			  (let* ((slot slots)
 				 (slot-name (slot-definition-name slot)))
 			    (when (slot-boundp object slot-name)
