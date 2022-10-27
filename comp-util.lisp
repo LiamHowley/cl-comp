@@ -12,15 +12,6 @@
     (otherwise class)))
 
 
-;; In all cached function calls below, whether
-;; calling class-direct-slots or class-direct-superclasses,
-;; a class must be finalized before a result will be returned.
-;; I.e. only cache when the class is finalized.
-;; Otherwise return nil.
-
-;; Cache tables are exported in package.lisp, so that they can
-;; be cleared when class definitions are redefined.
-
 ;; TO BE REWORKED IN PLACES!!!
 
 ;;; class precedents
@@ -31,7 +22,6 @@
   "Find all superclasses in the inheritance hierarchy 
 of a class. Results are cached unless nil."
   (let ((class (class-definition class)))
-;;    (when (class-finalized-p class)
       (cache-class-precedents class)))
 
 (define-memo-function (cache-class-precedents :table *class-precedents*) (class)
