@@ -230,6 +230,106 @@ When a single typed slot is required:
 (securep **) => CONDITION of type NO-APPLICABLE-METHOD-ERROR
 #+END_SRC
 
+** Utilities
+
+Function *class-precedents* /class/ 
+=> List of class precedents
+
+Description: Find all superclasses in the inheritance hierarchy of a class. Results are cached unless nil.
+
+
+Function *find-class-precedent* /class precedent type/
+=> Class
+
+Description: Find the precedent (name) in the list of precedents of class, by type. When present, returns the precedent class. Result is drawn from a cached list.
+
+
+Function *filter-precedents-by-type* /class/ &optional /filter/
+=> List of class precedents
+
+Description: Retrieve the prededents of a class filtered by type. Calls *map-filtered-precedents* and unless nil caches the result.
+
+
+Function *map-filtered-precedents* /class/ &optional /filter map/
+=> List of mapped class precedents.
+
+Description: Map a function to the precedents of a class that may be optionally filtered by type.
+
+
+Function *all-slots* /class/
+=> List of direct slot definitions
+
+Description: Returns all direct slot definitions including those of class precedents. Result is cached unless nil.
+
+
+Function *map-filtered-slots* /class/ &optional /filter map/
+=> List of mapped direct slots definitions.
+
+Description: Map a function to the direct slots of a class, including inherited slots, that may optionally be filtered by type.
+
+
+Function *filter-slots-by-type* /class type/
+=> List of direct slot definitions. 
+
+Description: Returns the direct slot definitions of all slots of type associated with a class, including inherited slots. Recursively walks through superclasses. Results are cached unless nil.
+
+
+Function *find-slot-definition* /class slot-name type/
+=> Direct slot definition.
+
+Description: Return and cache slot definition of slot-name and type. Results are cached unless nil.
+
+
+Macro *define-class-context* /(env class-type active-layers (&rest rest &key &allow-other-keys) &body body)/
+=> Captured dynamic environment.
+
+Description: Sets and captures the dynamic environment for specific contexts. Both ENV and CLASS-TYPE are symbols with the former dynamically bound within the macro body. The symbol set to the ENV variable is bound by the captured environment and returned. This captured environment encapsulates active layers and dynamic (special) values of class slot accessors, set through keyword args. To be used in conjunction with the WITH-CLASS-IN-CONTEXT macro.
+
+
+Macro *with-class-in-context* /(env class-instance &body body)/
+
+Description: Facilitates access to the dynamic context bound to ENV. ENV is set by the DEFINE-CLASS-CONTEXT macro.
+
+
+Macro *define-layer-context* /(env active-layers bindings &body body)/
+=> Captured dynamic environment.
+
+Description: Sets and captures the dynamic environment for specific contexts and bindings. The symbol set by the ENV variable is bound to the captured environment and returned.
+
+
+Macro *with-context* /(env &body body)/
+
+Description: Facilitates access to the dynamic context bound to ENV. ENV is set by the DEFINE-LAYER-CONTEXT macro.
+
+
+Macro *delete-context* /env/
+
+Description: Delete the captured dynamic environment.
+
+
+Function *clone-object* /object/
+=> Copy of object.
+
+Description: Makes a shallow copy of a clos object.
+
+
+Function *slots-with-values /class/ &key /type filter-if filter-if-not/
+=> 1. List of slot definitions. 2. List of slot names.
+
+Description: Walks through list of slots of class. May be filtered by type; filter-if and filter-if-not are expected to be functions and default to ~(constantly nil)~ and ~(constantly t)~ respectively. Returns the list of slots belonging to class that are bound to a value. For convenience it also returns a list of slot names. 
+
+
+Function *object-to-plist* /object/ &key /filter recurse package use-placeholders/
+=> Tree
+
+Description: Recursively walks through an object creating a plist from the initargs and values of it's slots. The keyword filter expects a symbol bound to a type. Recurse defaults to T. Package defaults to *PACKAGE*. The purpose of use-placeholders is to allow for a cacheable representation of the class, by using the slot name in lieu of a slot. Only slots with values are listed. The structural model of the data is replicated in the resulting tree.
+
+
+Function *equality* /object1 object2/
+=> Boolean
+
+Description: Functionally if not structurally equal: i.e. it facilitates equality testing between user-defined objects of different types.
+
 
 
 

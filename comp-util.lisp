@@ -166,7 +166,7 @@ To be used in conjunction with the WITH-CLASS-IN-CONTEXT macro."
 
 (defmacro with-class-in-context (env class-instance &body body)
   "Facilitates access to the dynamic context bound to ENV. 
-ENV is set by the DEFINE-CONTEXT macro."
+ENV is set by the DEFINE-CLASS-CONTEXT macro."
   `(with-dynamic-environment ((dynamic ,env))
      (unless (typep ,class-instance (dynamic class-type))
        (error "the object ~a is not of type ~a. Out of context." ,class-instance (dynamic class-type)))
@@ -177,7 +177,7 @@ ENV is set by the DEFINE-CONTEXT macro."
 
 (defmacro define-layer-context (env active-layers bindings &body body)
   "Sets and captures the dynamic environment for specific contexts and bindings. The symbol set by the 
-ENV variable is bound to the captured environment and returned."
+ENV variable is bound to the captured environment and returned. To be used with the WITH-CONTEXT macro."
   `(defdynamic ,env
      (with-active-layers ,active-layers
        (dlet ,bindings
