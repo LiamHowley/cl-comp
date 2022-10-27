@@ -84,7 +84,8 @@ filtered by type"
 (defvar *all-slots* (make-hash-table :test #'equal))
 
 (defun all-slots% (class)
-  "Returns effective slots as direct slots."
+  "Returns all direct slot definitions including 
+those of class precedents."
   (append (class-direct-slots class)
 	  (mappend #'map-tree-depth-first #'all-slots%
 		   (class-direct-superclasses class))))
@@ -116,13 +117,6 @@ Results are cached unless nil."
   (let ((class (class-definition class)))
     (cache-filter-slots-by-type class object-type)))
   
-
-(defun filtered-effective-slots (class filter)
-  (loop for slot in (class-slots class)
-     for target-slotp = (funcall filter slot)
-     if target-slotp
-     collect slot))
-
 
 (define-memo-function (cache-filter-slots-by-type :table *filtered-slots*) (class object-type)
   (let* ((object-type (if (and (symbolp object-type)
