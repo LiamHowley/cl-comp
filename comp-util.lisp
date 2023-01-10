@@ -115,7 +115,10 @@ Results are cached unless nil."
 			  object-type))
 	 (predicate #'(lambda (slot)
 			(typep slot object-type))))
-    (map-filtered-slots class predicate)))
+    (remove-duplicates (map-filtered-slots class predicate)
+		       :from-end t
+		       :test #'(lambda (slota slotb)
+				 (eq (slot-definition-name slota) (slot-definition-name slotb))))))
 
 
 
