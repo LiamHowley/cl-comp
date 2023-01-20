@@ -18,11 +18,13 @@
 
 (defvar *class-precedents* (make-hash-table :test #'equal))
 
-(defun class-precedents (class)
+(defun class-precedents (class &optional update-cache)
   "Find all superclasses in the inheritance hierarchy 
 of a class. Results are cached unless nil."
   (let ((class (class-definition class)))
-      (cache-class-precedents class)))
+    (when update-cache
+      (remhash (list class slot-name type) *class-precedents*))
+    (cache-class-precedents class)))
 
 (define-memo-function (cache-class-precedents :table *class-precedents*) (class)
   (class-precedents% class))
@@ -36,9 +38,11 @@ of a class. Results are cached unless nil."
 
 (defvar *class-precedent* (make-hash-table :test #'equal))
 
-(defun find-class-precedent (class precedent type)
+(defun find-class-precedent (class precedent type &optional update-cache)
   "Find the precedent (name) in the list of precedents of class, by type.
 When present, returns the precedent class."
+  (when update-cache
+    (remhash (list class precedent type) *class-precedent*))
   (cache-find-class-precedent class precedent type))
 
 (define-memo-function (cache-find-class-precedent :table *class-precedent*) (class precedent type)
@@ -99,12 +103,14 @@ those of class precedents."
 
 (defvar *filtered-slots* (make-hash-table :test #'equal))
 
-(defun filter-slots-by-type (class object-type)
+(defun filter-slots-by-type (class object-type &optional update-cache)
   "Returns the direct slot definitions of all slots 
 of object-type associated with a class, including 
 inherited slots. Recursively walks through superclasses. 
 Results are cached unless nil."
   (let ((class (class-definition class)))
+    (when update-cache
+      (remhash (list class object-type) *filtered-slots*))
     (cache-filter-slots-by-type class object-type)))
   
 
@@ -126,9 +132,11 @@ Results are cached unless nil."
 
 (defvar *slot-definitions* (make-hash-table :test #'equal))
 
-(defun find-slot-definition (class slot-name type)
+(defun find-slot-definition (class slot-name type &optional update-cache)
   "Return and cache slot definition of slot-name and type.
 Results are cached unless nil."
+  (when update-cache
+    (remhash (list class slot-name type) *slot-definitions*))
   (cache-find-slot-definition class slot-name type))
 
 (define-memo-function (cache-find-slot-definition :table *slot-definitions*) (class slot-name type)
