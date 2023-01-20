@@ -239,7 +239,7 @@ a list of slot names."
       finally (return (values slots slot-names)))))
 
 
-(defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders) 
+(defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders with-object-name) 
   "Recursively walks through a class creating a plist from the initargs
 and values of it's slots. The structural model of the data is replicated in
 the resulting tree."
@@ -291,7 +291,8 @@ the resulting tree."
 				   acc))
 			    (t acc)))))))
       (let ((list (walk list nil)))
-	(push (class-name class) list)
+	(when with-object-name
+	  (push (class-name class) list))
 	list))))
 
 
