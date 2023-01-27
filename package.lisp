@@ -4,7 +4,9 @@
    :stw.util
    :ensure-list
    :map-tree-depth-first
-   :mappend)
+   :mappend
+   :aif
+   :self)
   (:import-from :fare-memoization
    :define-memo-function)
   (:import-from
