@@ -239,7 +239,14 @@ a list of slot names."
       finally (return (values slots slot-names)))))
 
 
-(defun object-to-plist (object &key filter (recurse t) (package *package*) use-placeholders with-object-name) 
+(defun object-to-plist
+    (object &key
+	      filter (recurse t) use-placeholders with-object-name
+	      (map
+	       #'(lambda (object slot)
+		   (let ((slot-name (slot-definition-name slot)))
+		     (when (slot-boundp object slot-name)
+		       (slot-value object slot-name))))))
   "Recursively walks through a class creating a plist from the initargs
 and values of it's slots. The structural model of the data is replicated in
 the resulting tree."
@@ -252,44 +259,55 @@ the resulting tree."
 	       (cond ((null slots)
 		      acc)
 		     ((consp slots)
-		      (walk (car slots) (walk (cdr slots) acc)))
-		     ((atom slots)
-		      (if (typep slots (or filter 'c2mop:standard-direct-slot-definition))
-			  (let* ((slot slots)
-				 (slot-name (slot-definition-name slot)))
-			    (when (slot-boundp object slot-name)
-			      (let* ((initarg (car (slot-definition-initargs slot)))
-				     (value (when (find-symbol (symbol-name slot-name) package)
-					      (unless (member slot-name keys)
-						(slot-value object slot-name)))))
-				(push slot-name keys)
-				(setf acc
-				      (cond ((and recurse
-						  (consp value))
-					     (cons initarg (cons (walk value nil) acc)))
-					    (value
-					     (cons initarg
-						   (cons (if use-placeholders
-							     slot-name
-							     value)
-							 acc)))
-					    (t acc)))))
-			    acc)
-			  (typecase (class-of slots)
-			    (built-in-class
-			     (cons (if use-placeholders
-				       (car keys)
-				       slots)
-				   acc))
-			    (standard-class
-			     (cons (if recurse
-				       (object-to-plist slots
-							:filter filter
-							:use-placeholders use-placeholders
-							:package package)
-				       slots)
-				   acc))
-			    (t acc)))))))
+		      (if (consp (car slots))
+			  (walk (cdr slots) (nreverse (cons (walk (car slots) nil) acc)))
+			  (walk (car slots) (walk (cdr slots) acc))))
+		     ((typep slots (or filter 'c2mop:standard-direct-slot-definition))
+		      (let* ((slot slots)
+			     (slot-name (slot-definition-name slot))
+			     (initarg (car (slot-definition-initargs slot)))
+			     (value (funcall map object slot)))
+			(when value
+			  (push slot-name keys)
+			  (setf acc
+				(cond ((and recurse
+					    (consp value))
+				       (cons initarg (cons (walk value nil) acc)))
+				      (value
+				       (cons initarg
+					     (cons (if use-placeholders
+						       slot-name
+						       (if (and (class-of value)
+								recurse
+								(typep (class-of value) 'standard-class))
+							   ;; When the value of a slot is another
+							   ;; user-defined object, and recurse is T.
+							   (object-to-plist value
+									    :filter filter
+									    :use-placeholders use-placeholders
+									    :recurse recurse
+									    :map map)
+							   value))
+						   acc)))
+				      (t acc))))
+			acc))
+		     ((and (class-of slots)
+			   (typep (class-of slots) 'standard-class))
+		      (cons (if recurse
+				(object-to-plist slots
+						 :filter filter
+						 :use-placeholders use-placeholders
+						 :recurse recurse
+						 :map map)
+				slots)
+			    acc))
+		     ((and (class-of slots)
+		    	   (typep (class-of slots) 'built-in-class))
+		      (cons (if use-placeholders
+		    		(car keys)
+		    		slots)
+		    	    acc))
+		     (t acc))))
       (let ((list (walk list nil)))
 	(when with-object-name
 	  (push (class-name class) list))
