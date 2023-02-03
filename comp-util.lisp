@@ -23,7 +23,7 @@
 of a class. Results are cached unless nil."
   (let ((class (class-definition class)))
     (when update-cache
-      (remhash (list class slot-name type) *class-precedents*))
+      (remhash (list class) *class-precedents*))
     (cache-class-precedents class)))
 
 (define-memo-function (cache-class-precedents :table *class-precedents*) (class)
