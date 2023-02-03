@@ -215,7 +215,7 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
 
 (defun clone-object (original)
   "Makes shallow copy of clos object."
-  (let ((clone (object-to-plist original :recurse nil)))
+  (let ((clone (object-to-plist original :recurse nil :with-object-name t)))
     (apply #'make-instance (car clone) (cdr clone))))
 
 
@@ -284,6 +284,7 @@ the resulting tree."
 						     (object-to-plist value
 								      :filter filter
 								      :use-placeholders use-placeholders
+								      :with-object-name with-object-name
 								      :recurse recurse
 								      :map map)
 						     value))
@@ -297,6 +298,7 @@ the resulting tree."
 						 :filter filter
 						 :use-placeholders use-placeholders
 						 :recurse recurse
+						 :with-object-name with-object-name
 						 :map map)
 				slots)
 			    acc))
