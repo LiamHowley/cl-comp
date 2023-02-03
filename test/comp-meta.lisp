@@ -138,7 +138,7 @@
   (let ((cloned-obj (clone-object instance)))
     (of-type comp-base-class (class-of cloned-obj))
     (of-type test-class cloned-obj)
-    (is eq t (slot-a cloned-obj))))
+    (is eq (slot-a cloned-obj) t)))
 
 
 
@@ -167,21 +167,23 @@
 (define-test object->plist
   :parent cl-comp
   :depends-on (sanity)
-  (is equal (object-to-plist instance)
-      `(test-class :slot-a t))
+  (is equal `(test-class :slot-a t :slot-a t)
+      (object-to-plist instance :with-object-name t))
+  (is equal `(test-class :slot-a t)
+      (object-to-plist instance :with-object-name t :filter 'test-1-direct-slot-definition))
   (is equal
-      (object-to-plist *complex-person*)
       `(complex-person
 	:name "Michele"
 	:email "michele@testemail.com"
 	:interests ("reading" "soccer" "taekwondo")
 	:occupations ((occupation :job-type "accountant" :qualification "professional")
-		      (occupation :job-type "actuary" :qualification "professional"))))
+		      (occupation :job-type "actuary" :qualification "professional")))
+      (object-to-plist *complex-person* :with-object-name t))
   (is equal
-      (object-to-plist *complex-person* :use-placeholders t)
       `(complex-person
 	:name name
 	:email email 
 	:interests (interests interests interests)
 	:occupations ((occupation :job-type job-type :qualification qualification)
-		      (occupation :job-type job-type :qualification qualification)))))
+		      (occupation :job-type job-type :qualification qualification)))
+      (object-to-plist *complex-person* :use-placeholders t :with-object-name t)))
