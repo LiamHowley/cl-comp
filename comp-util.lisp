@@ -257,11 +257,11 @@ the resulting tree."
 	 (keys))
     (labels ((walk (slots acc)
 	       (cond ((null slots)
-		      acc)
+		      (nreverse acc))
 		     ((consp slots)
 		      (if (consp (car slots))
-			  (walk (cdr slots) (nreverse (cons (walk (car slots) nil) acc)))
-			  (walk (car slots) (walk (cdr slots) acc))))
+			  (walk (cdr slots) (cons (walk (car slots) nil) acc))
+			  (walk (cdr slots) (walk (car slots) acc))))
 		     ((typep slots (or filter 'c2mop:standard-direct-slot-definition))
 		      (let* ((slot slots)
 			     (slot-name (slot-definition-name slot))
@@ -272,23 +272,22 @@ the resulting tree."
 			  (setf acc
 				(cond ((and recurse
 					    (consp value))
-				       (cons initarg (cons (walk value nil) acc)))
+				       (cons (walk value nil) (cons initarg acc)))
 				      (value
-				       (cons initarg
-					     (cons (if use-placeholders
-						       slot-name
-						       (if (and (class-of value)
-								recurse
-								(typep (class-of value) 'standard-class))
-							   ;; When the value of a slot is another
-							   ;; user-defined object, and recurse is T.
-							   (object-to-plist value
-									    :filter filter
-									    :use-placeholders use-placeholders
-									    :recurse recurse
-									    :map map)
-							   value))
-						   acc)))
+				       (cons (if use-placeholders
+						 slot-name
+						 (if (and (class-of value)
+							  recurse
+							  (typep (class-of value) 'standard-class))
+						     ;; When the value of a slot is another
+						     ;; user-defined object, and recurse is T.
+						     (object-to-plist value
+								      :filter filter
+								      :use-placeholders use-placeholders
+								      :recurse recurse
+								      :map map)
+						     value))
+					     (cons initarg acc)))
 				      (t acc))))
 			acc))
 		     ((and (class-of slots)
