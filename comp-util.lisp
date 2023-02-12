@@ -219,6 +219,62 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
     (apply #'make-instance (car clone) (cdr clone))))
 
 
+(defun object-to-plist (object &key
+				 filter (recurse t) use-placeholders with-object-name
+				 (map
+				  #'(lambda (object slot)
+				      (let ((slot-name (slot-definition-name slot)))
+					(when (slot-boundp object slot-name)
+					  (slot-value object slot-name))))))
+  "Iterates through a class creating a plist from the initargs
+and values of it's slots. The structural model of the data is replicated in
+the resulting tree. 
+
+NOTE: When a slot is assigned the value of the instance of a 
+class of type standard-class and recurse is T, (the default), the function
+OBJECT-TO-PLIST is recursively invoked. Care is taken to avoid recursion on
+class definitions as slots of class definitions may reference the defining
+class and so create an infinitely recursive loop."
+  (let* ((class (class-of object))
+	 (list (if filter
+		   (filter-slots-by-type class filter)
+		   (all-slots class))))
+    (flet ((recurse-over-value (value &optional slot-name)
+	     (cond ((and (class-of value)
+			 recurse
+			 (typep (class-of value) 'standard-class)
+			 (null (typep value 'standard-class)))
+		    (object-to-plist value
+				     :filter filter
+				     :use-placeholders use-placeholders
+				     :with-object-name with-object-name
+				     :recurse recurse
+				     :map map))
+		   (use-placeholders slot-name)
+		   (t value))))
+      (let ((plist
+	      (loop
+		for slot in list
+		for slot-name = (slot-definition-name slot)
+		for value = (when (or (and filter (typep slot filter))
+				      (and (null filter) (typep slot 'c2mop:standard-direct-slot-definition)))
+			      (funcall map object slot))
+		for initarg = (car (slot-definition-initargs slot))
+		when value
+		  collect initarg
+		if (and value recurse (consp value))
+		  collect (loop
+			    for value% in value
+			      collect (recurse-over-value value% slot-name))
+		else if (and value use-placeholders)
+		       collect slot-name
+		else if value
+		       collect (recurse-over-value value))))
+	(when with-object-name
+	  (push (class-name class) plist))
+	plist))))
+
+
 (defun slots-with-values
     (class &key (type 'standard-direct-slot-definition) (filter-if (constantly nil)) (filter-if-not (constantly t)))
   "Returns the list of slots belonging to class that
@@ -238,81 +294,6 @@ a list of slot names."
 	  and do (push slot-name record)
       finally (return (values slots slot-names)))))
 
-
-(defun object-to-plist
-    (object &key
-	      filter (recurse t) use-placeholders with-object-name
-	      (map
-	       #'(lambda (object slot)
-		   (let ((slot-name (slot-definition-name slot)))
-		     (when (slot-boundp object slot-name)
-		       (slot-value object slot-name))))))
-  "Recursively walks through a class creating a plist from the initargs
-and values of it's slots. The structural model of the data is replicated in
-the resulting tree."
-  (let* ((class (class-of object))
-	 (list (if filter
-		   (filter-slots-by-type class filter)
-		   (all-slots class)))
-	 (keys))
-    (labels ((walk (slots acc)
-	       (cond ((null slots)
-		      (nreverse acc))
-		     ((consp slots)
-		      (if (consp (car slots))
-			  (walk (cdr slots) (cons (walk (car slots) nil) acc))
-			  (walk (cdr slots) (walk (car slots) acc))))
-		     ((typep slots (or filter 'c2mop:standard-direct-slot-definition))
-		      (let* ((slot slots)
-			     (slot-name (slot-definition-name slot))
-			     (initarg (car (slot-definition-initargs slot)))
-			     (value (funcall map object slot)))
-			(when value
-			  (push slot-name keys)
-			  (setf acc
-				(cond ((and recurse
-					    (consp value))
-				       (cons (walk value nil) (cons initarg acc)))
-				      (value
-				       (cons (if use-placeholders
-						 slot-name
-						 (if (and (class-of value)
-							  recurse
-							  (typep (class-of value) 'standard-class))
-						     ;; When the value of a slot is another
-						     ;; user-defined object, and recurse is T.
-						     (object-to-plist value
-								      :filter filter
-								      :use-placeholders use-placeholders
-								      :with-object-name with-object-name
-								      :recurse recurse
-								      :map map)
-						     value))
-					     (cons initarg acc)))
-				      (t acc))))
-			acc))
-		     ((and (class-of slots)
-			   (typep (class-of slots) 'standard-class))
-		      (cons (if recurse
-				(object-to-plist slots
-						 :filter filter
-						 :use-placeholders use-placeholders
-						 :recurse recurse
-						 :with-object-name with-object-name
-						 :map map)
-				slots)
-			    acc))
-		     ((and (class-of slots)
-		    	   (typep (class-of slots) 'built-in-class))
-		      (cons (if use-placeholders
-		    		(car keys)
-		    		slots)
-		    	    acc))
-		     (t acc))))
-      (let ((list (walk list nil)))
-	(when with-object-name
-	  (push (class-name class) list))
-	list))))
 
 
 (defun equality (ob1 ob2)
