@@ -32,8 +32,8 @@ of a class. Results are cached unless nil."
 (defun class-precedents% (class)
   (let ((parents (class-direct-superclasses class)))
     (append parents
-	    (mappend #'map-tree-depth-first #'class-precedents%
-		     parents))))
+	          (mappend #'map-tree-depth-first #'class-precedents%
+		                 parents))))
 
 
 (defvar *class-precedent* (make-hash-table :test #'equal))
@@ -47,8 +47,8 @@ When present, returns the precedent class."
 
 (define-memo-function (cache-find-class-precedent :table *class-precedent*) (class precedent type)
   (loop for class in (filter-precedents-by-type (class-definition class) type)
-	when (eq (class-name class) precedent)
-	  return class))
+	      when (eq (class-name class) precedent)
+	        return class))
 
 
 ;;; filtered precedents
@@ -58,19 +58,19 @@ When present, returns the precedent class."
 (define-memo-function (filter-precedents-by-type :table *filtered-precedents*)
     (class object-type)
   (map-filtered-precedents (class-definition class)
-			   #'(lambda (class)
-			       (typep class object-type))))
+			                     #'(lambda (class)
+			                         (typep class object-type))))
 
 (defun map-filtered-precedents (class &optional (filter (constantly t)) (map #'identity))
   "Find all superclasses in the inheritance hierarchy of a class, 
 filtered by type"
   (let ((parents (class-direct-superclasses class)))
     (append (remove-if-not filter parents)
-	    (mapcar map
-		    (mappend #'map-tree-depth-first
-			     #'(lambda (class)
-				 (map-filtered-precedents class filter map))
-			     parents)))))
+	          (mapcar map
+		                (mappend #'map-tree-depth-first
+			                       #'(lambda (class)
+				                         (map-filtered-precedents class filter map))
+			                       parents)))))
 
 
 ;;; all direct slots, including slots derived from supers.
@@ -81,8 +81,8 @@ filtered by type"
   "Returns all direct slot definitions including 
 those of class precedents."
   (append (class-direct-slots class)
-	  (mappend #'map-tree-depth-first #'all-slots%
-		   (class-direct-superclasses class))))
+	        (mappend #'map-tree-depth-first #'all-slots%
+		               (class-direct-superclasses class))))
 
 (define-memo-function (all-slots :table *all-slots*) (class)
   (all-slots% class))
@@ -93,11 +93,11 @@ those of class precedents."
 (defun map-filtered-slots (class &optional (filter (constantly t)) (map #'identity))
   (let ((slots (remove-if-not filter (class-direct-slots class))))
     (append slots
-	    (mapcar map
-		    (mappend #'map-tree-depth-first
-			     #'(lambda (class)
-				 (map-filtered-slots class filter map))
-			     (class-direct-superclasses class))))))
+	          (mapcar map
+		                (mappend #'map-tree-depth-first
+			                       #'(lambda (class)
+				                         (map-filtered-slots class filter map))
+			                       (class-direct-superclasses class))))))
 
 
 
@@ -112,19 +112,19 @@ Results are cached unless nil."
     (when update-cache
       (remhash (list class object-type) *filtered-slots*))
     (cache-filter-slots-by-type class object-type)))
-  
+
 
 (define-memo-function (cache-filter-slots-by-type :table *filtered-slots*) (class object-type)
   (let* ((object-type (if (and (symbolp object-type)
-			       (find-class 'object-type nil))
-			  (find-class 'object-type)
-			  object-type))
-	 (predicate #'(lambda (slot)
-			(typep slot object-type))))
+			                         (find-class 'object-type nil))
+			                    (find-class 'object-type)
+			                    object-type))
+	       (predicate #'(lambda (slot)
+			                  (typep slot object-type))))
     (remove-duplicates (map-filtered-slots class predicate)
-		       :from-end t
-		       :test #'(lambda (slota slotb)
-				 (eq (slot-definition-name slota) (slot-definition-name slotb))))))
+		                   :from-end t
+		                   :test #'(lambda (slota slotb)
+				                         (eq (slot-definition-name slota) (slot-definition-name slotb))))))
 
 
 
@@ -141,15 +141,15 @@ Results are cached unless nil."
 
 (define-memo-function (cache-find-slot-definition :table *slot-definitions*) (class slot-name type)
   (loop for slot in (filter-slots-by-type (class-definition class) type)
-	when (eq (slot-definition-name slot) slot-name)
-	  return slot))
+	      when (eq (slot-definition-name slot) slot-name)
+	        return slot))
 
 
 
 ;;; defining context for use with special slots
 
 (defmacro define-class-context (env class-type active-layers (&rest rest &key &allow-other-keys)
-				  &body body)
+				                        &body body)
   "Sets and captures the dynamic environment for specific contexts. 
 Both ENV and CLASS-TYPE are symbols with the former dynamically bound within 
 the macro body. The symbol set to the ENV variable is bound by the captured 
@@ -157,22 +157,22 @@ environment and returned. This captured environment encapsulates active layers
  and dynamic (special) values of class slot accessors, set through keyword args. 
 To be used in conjunction with the WITH-CLASS-IN-CONTEXT macro."
   (let ((slot (gensym))
-	(value (gensym)))
+	      (value (gensym)))
     `(symbol-macrolet ((class-definition ,(find-class class-type)))
        (macrolet ((get-value (,slot ,value)
-		    `(cond (,,value ,,value)
-			   ((slot-value ,class-definition ',,slot)
-			    (slot-value ,class-definition ',,slot))
-			   (t nil))))
-	 (progn
-	   (defdynamic ,env
-	     (dynamic-let ((class-type ',class-type))
-	       (with-active-layers ,active-layers
-		 (dletf (,@(loop for (key value) on rest by #'cddr
-			      for slot = (find-symbol (symbol-name key))
-			      collect `((,slot class-definition) (get-value ,slot ,value))))
-		   ,@body
-		   (capture-dynamic-environment))))))))))
+		                `(cond (,,value ,,value)
+			                     ((slot-value ,class-definition ',,slot)
+			                      (slot-value ,class-definition ',,slot))
+			                     (t nil))))
+	       (progn
+	         (defdynamic ,env
+	           (dynamic-let ((class-type ',class-type))
+	             (with-active-layers ,active-layers
+		             (dletf (,@(loop for (key value) on rest by #'cddr
+			                           for slot = (find-symbol (symbol-name key))
+			                           collect `((,slot class-definition) (get-value ,slot ,value))))
+		               ,@body
+		               (capture-dynamic-environment))))))))))
 
 
 (defmacro with-class-in-context (env class-instance &body body)
@@ -192,8 +192,8 @@ ENV variable is bound to the captured environment and returned. To be used with 
   `(defdynamic ,env
      (with-active-layers ,active-layers
        (dlet ,bindings
-	 ,@body
-	 (capture-dynamic-environment)))))
+	       ,@body
+	       (capture-dynamic-environment)))))
 
 
 (defmacro with-context (env &body body)
@@ -202,7 +202,7 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
   `(when (typep (dynamic ,env) 'dynamic-environment)
      (progn
        (with-dynamic-environment ((dynamic ,env))
-	 ,@body))))
+	       ,@body))))
 
 
 (defmacro delete-context (env)
@@ -220,59 +220,60 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
 
 
 (defun object-to-plist (object &key
-				 filter (recurse t) use-placeholders with-object-name
-				 (map
-				  #'(lambda (object slot)
-				      (let ((slot-name (slot-definition-name slot)))
-					(when (slot-boundp object slot-name)
-					  (slot-value object slot-name))))))
+                                 filter (recurse t) use-placeholders with-object-name
+                                 (map
+                                  #'(lambda (object slot)
+                                      (let ((slot-name (slot-definition-name slot)))
+                                        (when (slot-boundp object slot-name)
+                                          (slot-value object slot-name))))))
   "Iterates through a class creating a plist from the initargs
 and values of it's slots. The structural model of the data is replicated in
-the resulting tree. 
+the resulting tree.
 
-NOTE: When a slot is assigned the value of the instance of a 
+NOTE: When a slot is assigned the value of the instance of a
 class of type standard-class and recurse is T, (the default), the function
 OBJECT-TO-PLIST is recursively invoked. Care is taken to avoid recursion on
 class definitions as slots of class definitions may reference the defining
 class and so create an infinitely recursive loop."
-  (let* ((class (class-of object))
-	 (list (if filter
-		   (filter-slots-by-type class filter)
-		   (all-slots class))))
-    (flet ((recurse-over-value (value &optional slot-name)
-	     (cond ((and (class-of value)
-			 recurse
-			 (typep (class-of value) 'standard-class)
-			 (null (typep value 'standard-class)))
-		    (object-to-plist value
-				     :filter filter
-				     :use-placeholders use-placeholders
-				     :with-object-name with-object-name
-				     :recurse recurse
-				     :map map))
-		   (use-placeholders slot-name)
-		   (t value))))
-      (let ((plist
-	      (loop
-		for slot in list
-		for slot-name = (slot-definition-name slot)
-		for value = (when (or (and filter (typep slot filter))
-				      (and (null filter) (typep slot 'c2mop:standard-direct-slot-definition)))
-			      (funcall map object slot))
-		for initarg = (car (slot-definition-initargs slot))
-		when value
-		  collect initarg
-		if (and value recurse (consp value))
-		  collect (loop
-			    for value% in value
-			      collect (recurse-over-value value% slot-name))
-		else if (and value use-placeholders)
-		       collect slot-name
-		else if value
-		       collect (recurse-over-value value))))
-	(when with-object-name
-	  (push (class-name class) plist))
-	plist))))
+  (let (recursed)
+    (labels ((iterate (object%)
+               (let* ((class (class-of object%))
+                      (list (if filter
+                                (filter-slots-by-type class filter)
+                                (all-slots class))))
+                 (flet ((recurse-over-value (value &optional slot-name)
+                          (cond ((member value recursed :test #'eq)
+                                 value)
+                                ((and (class-of value)
+                                      recurse
+                                      (typep (class-of value) 'standard-class)
+                                      (null (typep value 'standard-class)))
+                                 (push object% recursed)
+                                 (iterate value))
+                                (use-placeholders slot-name)
+                                (t value))))
+                   (let ((plist
+                           (loop
+                             for slot in list
+                             for slot-name = (slot-definition-name slot)
+                             for value = (when (or (and filter (typep slot filter))
+                                                   (and (null filter) (typep slot 'c2mop:standard-direct-slot-definition)))
+                                           (funcall map object% slot))
+                             for initarg = (car (slot-definition-initargs slot))
+                             when value
+                               collect initarg
+                             if (and value recurse (consp value))
+                               collect (loop
+                                         for value% in value
+                                         collect (recurse-over-value value% slot-name))
+                             else if (and value use-placeholders)
+                                    collect slot-name
+                             else if value
+                                    collect (recurse-over-value value))))
+                     (when with-object-name
+                       (push (class-name class) plist))
+                     plist)))))
+      (iterate object))))
 
 
 (defun slots-with-values
@@ -285,22 +286,22 @@ a list of slot names."
       for slot in (filter-slots-by-type (class-of class) type)
       for slot-name = (slot-definition-name slot)
       when (and (slot-boundp class slot-name)
-		(slot-value class slot-name)
-		(funcall filter-if-not slot))
-	unless (or (member slot-name record :test #'eq)
-		   (funcall filter-if slot))
-	  collect slot-name into slot-names
-	  and collect slot into slots
-	  and do (push slot-name record)
+		            (slot-value class slot-name)
+		            (funcall filter-if-not slot))
+	      unless (or (member slot-name record :test #'eq)
+		               (funcall filter-if slot))
+	        collect slot-name into slot-names
+	        and collect slot into slots
+	        and do (push slot-name record)
       finally (return (values slots slot-names)))))
 
 
 
 (defun equality (ob1 ob2)
-  "Functionally if not structurally equal: i.e. it facilitates equality 
+  "Functionally if not structurally equal: i.e. it facilitates equality
 testing between user-defined objects of different types."
   (flet ((set-obj (obj)
-	   (if (typep (class-of obj) 'built-in-class)
-	       obj
-	       (object-to-plist obj))))
+	         (if (typep (class-of obj) 'built-in-class)
+	             obj
+	             (object-to-plist obj))))
     (equal (set-obj ob1)(set-obj ob2))))
