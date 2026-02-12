@@ -24,7 +24,11 @@
   ())
 
 (defgeneric slot-definition-class (class)
-  (:method (layer) nil))
+  (:method (layer) nil)
+  (:documentation "Find the contextualized direct slot definition type 
+of layered metaobjects. Takes one argument, the metaobject of the layer 
+from which the context is derived."))
+
 
 (defmethod direct-slot-definition-class
     ((class base-class) &key &allow-other-keys)
