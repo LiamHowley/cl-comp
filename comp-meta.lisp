@@ -89,6 +89,21 @@ invoked more than once for each layer.")
   (:metaclass singleton-class))
 
 
+(defgeneric collate-layered-class-initargs (context class)
+  (:documentation "Retrieve slot definition initargs associated with
+an object of the class of type COMP-BASE-CLASS. Requires a class definition 
+and a class metaobject of the relevant context layer.")
+
+  (:method ((context symbol) class)
+    (collate-slot-definition-initargs (find-layer-class (find-layer context)) class))
+
+  (:method ((context comp-layer-context) class)
+    (let ((slot-definition-class (slot-definition-class context)))
+      (loop
+	      for slot in (filter-slots-by-type class slot-definition-class)
+	      append (slot-definition-initargs slot)))))
+
+
 ;;; helper macros to define a base class
 
 ;; I'm not too happy with applying the WITH-ACTIVE-LAYERS macro

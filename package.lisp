@@ -33,6 +33,7 @@
    :define-layered-function
    :define-layered-method
    :deflayer
+   :find-layer
    :find-layer-class
    :layer-active-p
    :layered-class
@@ -68,6 +69,7 @@
    ;; slots
    :slot-definition-class
    :comp-direct-slot-definition
+   :collate-layered-class-initargs 
 
    ;;layers
    :comp-base-layer
