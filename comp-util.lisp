@@ -215,8 +215,9 @@ ENV is set by the DEFINE-LAYERED-CONTEXT macro."
 
 (defun clone-object (original)
   "Makes shallow copy of clos object."
-  (let ((clone (object-to-plist original :recurse nil :with-object-name t)))
-    (apply #'make-instance (car clone) (cdr clone))))
+  (when original
+    (let ((clone (object-to-plist original :recurse nil :with-object-name t)))
+      (apply #'make-instance (car clone) (cdr clone)))))
 
 
 (defun object-to-plist (object &key
