@@ -23,17 +23,18 @@
 (defclass comp-effective-slot-definition (special-layered-effective-slot-definition)
   ())
 
-(defgeneric slot-definition-class (class)
-  (:method (layer) nil)
+(defgeneric slot-definition-class (class &key &allow-other-keys)
+  (:method (layer-class &key &allow-other-keys) nil)
   (:documentation "Find the contextualized direct slot definition type 
 of layered metaobjects. Takes one argument, the metaobject of the layer 
-from which the context is derived."))
+from which the context is derived, and keys representing initargs
+from slot-definition-class slots."))
 
 
 (defmethod direct-slot-definition-class
-    ((class base-class) &key &allow-other-keys)
+    ((class base-class) &rest rest &key &allow-other-keys)
   (let* ((layer-class (find-layer-class (class-layer class)))
-	       (slot-definition-class (slot-definition-class layer-class)))
+	       (slot-definition-class (apply #'slot-definition-class layer-class rest)))
     (if slot-definition-class
 	      slot-definition-class
 	      (call-next-method))))
