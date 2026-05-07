@@ -278,13 +278,13 @@ class and so create an infinitely recursive loop."
 
 
 (defun slots-with-values
-    (class &key (type 'standard-direct-slot-definition) (filter-if (constantly nil)) (filter-if-not (constantly t)))
+    (class &key (filter #'filter-slots-by-type) (type 'standard-direct-slot-definition) (filter-if (constantly nil)) (filter-if-not (constantly t)))
   "Returns the list of slots belonging to class that
 are bound to a value. For convenience it also returns
 a list of slot names."
   (let ((record nil))
     (loop
-      for slot in (filter-slots-by-type (class-of class) type)
+      for slot in (funcall filter (class-of class) type)
       for slot-name = (slot-definition-name slot)
       when (and (slot-boundp class slot-name)
 		            (slot-value class slot-name)
